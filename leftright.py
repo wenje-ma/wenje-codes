@@ -92,17 +92,18 @@ def process_file(path:Path):
 def select_folder_and_convert_mds():
   root=Tk()
   root.withdraw()
-  folder=filedialog.askdirectory(title="请选择要处理的文件夹（将递归处理其中所有 .md 文件）")
+  folder=filedialog.askdirectory(title="请选择要处理的文件夹（将递归处理其中所有 .md/.qmd/.tex 文件）")
   if not folder:
     print("未选择文件夹，退出。")
     return []
   folder_path=Path(folder)
-  targets=[p for p in folder_path.rglob("*.md") if p.is_file()]
+  exts=(".md",".qmd",".tex")
+  targets=[p for p in folder_path.rglob("*") if p.is_file() and p.suffix.lower() in exts]
   targets.sort(key=lambda p: str(p).lower())
   if not targets:
-    print(f"所选文件夹中没有 Markdown 文件: {folder_path}")
+    print(f"所选文件夹中没有 .md/.qmd/.tex 文件: {folder_path}")
     return []
-  print(f"共找到 {len(targets)} 个 Markdown 文件，开始转换…")
+  print(f"共找到 {len(targets)} 个目标文件，开始转换…")
   for md_path in targets:
     process_file(md_path)
   print(f"转换完成，共处理 {len(targets)} 个文件。")
