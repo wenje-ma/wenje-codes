@@ -1,61 +1,37 @@
-# codes
+# codes — Desktop Utilities for Markdown & PDF
 
-A small collection of utility scripts for processing Markdown and PDF files. All scripts are Python 3 and open a native multi-select file dialog via `tkinter`. You can pick several files at once, and repeat the dialog as many times as needed to add files from other folders; the scripts then process all of the accumulated files.
+> A small toolbox of Python 3 utilities for batch-processing Markdown and PDF files, all driven by native `tkinter` file dialogs: pick files from multiple folders, then process them in one go.
 
 ## Requirements
 
-### Base
+- Python 3.8+ with Tkinter (standard on Windows builds);
+- Per-script extras, installed as needed:
+  ```sh
+  pip install PyMuPDF rapidocr-onnxruntime pypdf
+  ```
+- `pdf_to_svg.py` additionally requires the external command-line tool [`pdf2svg`](https://github.com/dawbarton/pdf2svg) (looked up by default under `C:\rtools45\mingw64\bin\`).
 
-- **Python 3.8+** with **Tkinter**. All scripts use `tkinter` for their file dialogs, so a Python build without Tk support will fail at startup.
+## The scripts
 
-### Third-party packages
-
-Install the packages required by the scripts you actually use:
-
-```bash
-pip install PyMuPDF                  # for pdf_OCR.py, pdf_split.py
-pip install rapidocr-onnxruntime     # for pdf_OCR.py
-pip install pypdf                    # for pdf_to_txt.py
-```
-
-| Script | Extra packages (pip) | External tools |
-| :----: | :------------------: | :------------: |
-| `leftright.py` | — | — |
-| `md_merge.py` | — | — |
-| `pdf_OCR.py` | `PyMuPDF`, `rapidocr-onnxruntime` | — |
-| `pdf_split.py` | `PyMuPDF` | — |
-| `pdf_to_txt.py` | `pypdf` | — |
-| `pdf_to_svg.py` | — | `pdf2svg` (see below) |
-| `md_to_pdf.exe` | — | — |
-
-### External tools
-
-- **`pdf_to_svg.py`** requires the `pdf2svg` command-line tool. The script looks for it in `C:\rtools45\mingw64\bin\pdf2svg.exe`, falling back to whatever `pdf2svg` is on your `PATH`. Install it and make sure it is discoverable before running this script.
-
-## Scripts
-
-- **`leftright.py`** — Adds `\left` / `\right` to bare brackets, braces and pipes inside `$...$` / `$$...$$` math spans of Markdown files.
-- **`md_merge.py`** — Concatenates selected Markdown files into a single `document.md`, which is in the same directory as the first file.
-- **`pdf_OCR.py`** — OCRs scanned PDFs and writes a searchable text layer back into an `_ocr.pdf` copy.
-- **`pdf_to_svg.py`** — Converts each page of a PDF into SVG files using `pdf2svg`. Also accepts PDF paths as command-line arguments instead of the dialog.
-- **`pdf_split.py`** — Splits a PDF larger than the size limit into consecutive parts, each under the limit, by finding the largest page range that fits. The default limit is **95 MB** (below GitHub's 100 MB hard limit) and can be overridden with `--limit <MB>`. Also accepts PDF paths as command-line arguments.
-- **`pdf_to_txt.py`** — Extracts text from PDF pages into a sibling `.txt` file.
+| Script | What it does | Extra dependency |
+|--------|--------------|------------------|
+| `leftright.py` | Adds `\left` / `\right` to bare brackets, braces and vertical bars inside Markdown math environments | — |
+| `md_merge.py` | Merges the selected Markdown files into a single `document.md` | — |
+| `pdf_OCR.py` | OCRs scanned PDFs and writes a searchable-text copy `_ocr.pdf` | PyMuPDF, rapidocr-onnxruntime |
+| `pdf_split.py` | Splits large PDFs into parts under 95 MB (staying below GitHub's 100 MB limit); override with `--limit` | PyMuPDF |
+| `pdf_to_txt.py` | Extracts each PDF page's text into a same-named `.txt` | pypdf |
+| `md_to_pdf.exe` | Prebuilt executable that converts Markdown to PDF | — |
 
 ## Usage
 
-Run any script from the command line:
+Run any script with `python <script>.py`. A native file dialog opens:
 
-```bash
-python leftright.py
-```
+1. Select one or more files, click **Yes** to add files from another folder (repeat as needed);
+2. Click **No** to start processing the accumulated list;
+3. **Cancel** exits. Duplicate selections are removed automatically.
 
-A multi-select file dialog opens (pick several files of the relevant type at
-once). After each selection you are asked whether to keep adding files from
-other folders:
+Output files are written next to their inputs (e.g. `foo.pdf` → `foo_ocr.pdf`, `foo.txt`, or part files `foo_part1.pdf`, …).
 
-- **Yes** → the dialog opens again so you can append files from another folder.
-- **No** → all accumulated files are processed.
+## Related repositories
 
-Canceling the file dialog ends the selection: if you already picked files they
-are processed, otherwise the script exits without doing anything. Duplicate
-selections are skipped automatically.
+More tools, notes and research on the [profile page](https://github.com/wenje-ma).
