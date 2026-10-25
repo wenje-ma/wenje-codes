@@ -24,7 +24,7 @@
 
 ## Usage
 
-Run any script with `python <script>.py`. A native file dialog opens:
+Run any script with `python < script> .py`. A native file dialog opens:
 
 1. Select one or more files, click **Yes** to add files from another folder (repeat as needed);
 2. Click **No** to start processing the accumulated list;
