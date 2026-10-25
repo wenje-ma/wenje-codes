@@ -35,7 +35,7 @@ def math_spans(text:str):
 def convert_span(span:str)->str:
   bars=[m for m in BAR.finditer(span) if not WRAPPED_PRE.search(m.string,0,m.start())]
   if len(bars)%2:
-    print(f"警告: 数学片段内 | 数量为奇数（无法可靠配对，整段跳过）: {span[:60]!r}")
+    print(f"Warning: odd | count in math span (skipped): {span[:60]!r}")
   else:
     for k in range(len(bars)-1,-1,-1):
       m=bars[k]
@@ -74,11 +74,11 @@ def process_file(path:Path):
   try:
     text=data.decode("utf-8")
   except UnicodeDecodeError:
-    print(f"跳过（非 UTF-8）: {path}")
+    print(f"Skipped (non-UTF-8): {path}")
     return
   new=convert(text)
   if new==text:
-    print(f"无需修改: {path}")
+    print(f"No change: {path}")
     return
   path.write_bytes((("\ufeff" if bom else "")+new).encode("utf-8"))
   n1=new.count("\\left(")-text.count("\\left(")
@@ -88,24 +88,24 @@ def process_file(path:Path):
   n5=new.count("\\left\\|")-text.count("\\left\\|")
   n6=new.count("\\left\\langle")-text.count("\\left\\langle")
   n7=new.count("\\right\\rangle")-text.count("\\right\\rangle")
-  print(f"已转换: {path}  (+\\left( ×{n1}, +\\left[ ×{n2}, +\\left\\{{ ×{n3}, +\\left| ×{n4}, +\\left\\| ×{n5}, +\\left\\langle ×{n6}, +\\right\\rangle ×{n7})")
+  print(f"Converted: {path}  (+\\left( x{n1}, +\\left[ x{n2}, +\\left\\{{ x{n3}, +\\left| x{n4}, +\\left\\| x{n5}, +\\left\\langle x{n6}, +\\right\\rangle x{n7})")
 def select_folder_and_convert_mds():
   root=Tk()
   root.withdraw()
-  folder=filedialog.askdirectory(title="请选择要处理的文件夹（将递归处理其中所有 .md/.qmd/.tex 文件）")
+  folder=filedialog.askdirectory(title="Select folder (recursively processes .md/.qmd/.tex)")
   if not folder:
-    print("未选择文件夹，退出。")
+    print("No folder selected, exit.")
     return []
   folder_path=Path(folder)
   exts=(".md",".qmd",".tex")
   targets=[p for p in folder_path.rglob("*") if p.is_file() and p.suffix.lower() in exts]
   targets.sort(key=lambda p: str(p).lower())
   if not targets:
-    print(f"所选文件夹中没有 .md/.qmd/.tex 文件: {folder_path}")
+    print(f"No .md/.qmd/.tex files in folder: {folder_path}")
     return []
-  print(f"共找到 {len(targets)} 个目标文件，开始转换…")
+  print(f"Found {len(targets)} target files, converting...")
   for md_path in targets:
     process_file(md_path)
-  print(f"转换完成，共处理 {len(targets)} 个文件。")
+  print(f"Done, processed {len(targets)} files.")
 if __name__=="__main__":
   select_folder_and_convert_mds()

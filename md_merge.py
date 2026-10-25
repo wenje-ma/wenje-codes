@@ -3,7 +3,7 @@ from tkinter import Tk,filedialog,messagebox
 import re
 def merge_markdown_files(selected_md_paths:list[str],output_md_path:str|None=None):
   if len(selected_md_paths)==0:
-    raise ValueError("没有传入待合并的Markdown文件")
+    raise ValueError("No Markdown files provided")
   first_file=Path(selected_md_paths[0])
   if output_md_path is None:
     out_file=first_file.parent/"document.md"
@@ -13,9 +13,9 @@ def merge_markdown_files(selected_md_paths:list[str],output_md_path:str|None=Non
   with open(out_file,"w",encoding="utf-8") as out_f:
     for md_path_str in selected_md_paths:
       p=Path(md_path_str)
-      print(f"正在合并: {p.name}")
+      print(f"Merging: {p.name}")
       if not p.exists():
-        print(f"⚠️跳过不存在文件: {p.name}")
+        print(f"Skipping missing file: {p.name}")
         continue
       try:
         content=p.read_text(encoding="utf-8")
@@ -23,8 +23,8 @@ def merge_markdown_files(selected_md_paths:list[str],output_md_path:str|None=Non
         out_f.write("\n\n")
         out_f.write(content)
       except Exception as e:
-        print(f"⚠️读取失败跳过 {p.name}: {str(e)}")
-  print(f"\n✅合并完成，输出文件: {out_file.resolve()}")
+        print(f"Read failed, skipped {p.name}: {str(e)}")
+  print(f"\nDone, output file: {out_file.resolve()}")
   return str(out_file)
 def select_and_merge_md():
   root=Tk()
@@ -32,7 +32,7 @@ def select_and_merge_md():
   targets:list[Path]=[]
   seen:set[str]=set()
   while True:
-    selected_files=filedialog.askopenfilenames(title="请选择需要合并的 Markdown 文件（按住Ctrl多选，顺序就是合并顺序；如需跨文件夹请再次选择，取消则结束选择）",filetypes=[("Markdown 文件","*.md"),("All Files","*.*")])
+    selected_files=filedialog.askopenfilenames(title="Select Markdown files to merge (Ctrl multi-select, order is merge order; reselect for cross-folder, cancel to stop)",filetypes=[("Markdown files","*.md"),("All Files","*.*")])
     if selected_files:
       for f in selected_files:
         p=Path(f)
@@ -43,13 +43,13 @@ def select_and_merge_md():
           seen.add(key)
           targets.append(p)
       if not messagebox.askyesno(
-        title="继续选择",
-        message=f"已选择 {len(targets)} 个 Markdown 文件。\n\n「是」→ 继续从其他文件夹选择\n「否」→ 开始合并"):
+        title="Continue selecting",
+        message=f"Selected {len(targets)} Markdown files.\n\nYes -> continue selecting from other folders\nNo -> start merging"):
         break
     else:
       break
   if not targets:
-    print("未选择任何 Markdown 文件，程序退出。")
+    print("No Markdown file selected, exit.")
     return []
   merged_output=merge_markdown_files([str(p) for p in targets])
   return [merged_output]
