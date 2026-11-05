@@ -16,6 +16,8 @@
 | Script | What it does | Extra dependency |
 |--------|--------------|------------------|
 | `leftright.py` | Adds `\left` / `\right` to bare brackets, braces and vertical bars inside Markdown math environments | — |
+| `math_space_strip.py` | Removes every whitespace character inside math spans, rewriting `\partial u` as `\partial{u}` and `\sqrt g` as `\sqrt{g}` so the formula still compiles; `\ ` becomes `\,`; keeps `\qquad`, `\quad`, `\,`; leaves fenced code, inline code and TeX comments alone; understands `$…$`, `$$…$$`, `\[…\]`, `\(…\)` and the usual `equation`/`align`/`gather` environments | — |
+| `run_all.py` | Runs `leftright.py` → `space_gt.py` → `math_space_strip.py` over one folder in that order, then audits for leftover math whitespace | — |
 | `md_merge.py` | Merges the selected Markdown files into a single `document.md` | — |
 | `pdf_OCR.py` | OCRs scanned PDFs and writes a searchable-text copy `_ocr.pdf` | PyMuPDF, rapidocr-onnxruntime |
 | `pdf_split.py` | Splits large PDFs into parts under 95 MB (staying below GitHub's 100 MB limit); override with `--limit` | PyMuPDF |
@@ -31,6 +33,14 @@ Run any script with `python <script>.py`. A native file dialog opens:
 3. **Cancel** exits. Duplicate selections are removed automatically.
 
 Output files are written next to their inputs (e.g. `foo.pdf` → `foo_ocr.pdf`, `foo.txt`, or part files `foo_part1.pdf`, …).
+
+The folder-based scripts (`space_gt.py`, `math_space_strip.py`, `run_all.py`) also accept a folder — or, for the latter two, a single file — as the first argument, which skips the dialog:
+
+```sh
+python run_all.py D:\wenje-ma
+python math_space_strip.py D:\wenje-ma --dry-run      # report only, writes nothing
+python math_space_strip.py D:\wenje-ma --pairs out.jsonl   # dump rewritten formulas for render checking
+```
 
 ## Related repositories
 
