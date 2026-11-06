@@ -25,8 +25,14 @@ from tkinter import Tk,filedialog
 # "\ " (backslash-space, e.g. "\delta^{\alpha}_{\ \gamma}") becomes "\," so the
 # shifted-index look survives without a real space character.
 #
-# Deliberately kept: "\qquad", "\quad", "\," -- they contain no space character but
-# do leave visible gaps, which is wanted for the "A,\qquad B" side-by-side layout.
+# Deliberately kept, never rewritten: "\quad", "\quad" (side-by-side layout),
+# "\!" (the overlap in "R[\![t]\!]"), and "\," wherever it still carries meaning:
+# before a differential or unit, between two factors, before a condition.
+#
+# "\," next to \text{...} becomes "\;" instead, so the gap between a formula and
+# an annotation has the width of an interword space in the surrounding text
+# (0.2778em, against 0.1667em for "\,"). ", \," is dropped outright: the comma
+# already ends the list item with its own punctuation space.
 #
 # Protected regions are never touched: fenced code blocks, inline code, TeX
 # comments. Math is recognised in $...$, $$...$$, \[...\], \(...\) and, in .tex
@@ -258,7 +264,127 @@ def protect_text_mode(span:str)->str:
   return "".join(parts)
 
 
-def convert_span(span:str,pairs:Counter)->str:
+STAGGER_LEAD=re.compile(r"(?:\\[,;:>]|\\quad|\\quad|\\ |~|\s)+")
+
+TEXT_GAP_LEFT_PUNCT=re.compile(
+  r"([,;])\\,(?=\\(?:text|mbox|textrm|textnormal|intertext|hbox)\s*\{)")
+TEXT_GAP_LEFT=re.compile(
+  r"\\,(?=\\(?:text|mbox|textrm|textnormal|intertext|hbox)\s*\{)")
+PUNCT_THIN=re.compile(r"([,;])(?:\\,)+")
+
+
+def _atom_end(s:str,i:int)->int:
+  """s[i] starts a TeX argument: a {...} group, a control word, or one char."""
+  if i>=len(s):
+    return -1
+  if s[i]=="{":
+    depth=0
+    while i<len(s):
+      c=s[i]
+      if c=="\\":
+        i+=2
+        continue
+      if c=="{":
+        depth+=1
+      elif c=="}":
+        depth-=1
+        if depth==0:
+          return i+1
+      i+=1
+    return -1
+  if s[i]=="\\":
+    j=i+1
+    while j<len(s) and s[j].isalpha():
+      j+=1
+    return j if j>i+1 else min(i+2,len(s))
+  return i+1
+
+
+def fix_stagger(span:str,count:list)->str:
+  """`^{A}_{\\,B}` -> `^{A}{}_{B}`.
+
+  A thin space at the head of the subscript only shifts the glyph inside a
+  subscript box that still hangs directly under the superscript, so the two
+  indices stay stacked. Attaching the subscript to an empty base after the
+  superscript is the construction that really offsets it.
+  """
+  out=[]
+  i,n=0,len(span)
+  while i<n:
+    c=span[i]
+    if c=="\\" and i+1<n:
+      out.append(span[i:i+2])
+      i+=2
+      continue
+    if c=="^":
+      e=_atom_end(span,i+1)
+      if e>0 and e+1<n and span[e]=="_" and span[e+1]=="{":
+        f=_atom_end(span,e+1)
+        if f>0:
+          body=span[e+2:f-1]
+          m=STAGGER_LEAD.match(body)
+          if m and m.end()<len(body) and _atom_end(body,m.end())>0:
+            count[0]+=1
+            out.append(span[i:e])
+            out.append("{}")
+            out.append("_{"+body[m.end():]+"}")
+            i=f
+            continue
+      out.append("^")
+      i+=1
+      continue
+    out.append(c)
+    i+=1
+  return "".join(out)
+
+
+def retune_text_gaps(span:str,count:list)->str:
+  """Give the gap between a formula and \\text{...} the width of body text.
+
+  "\\," is 0.1667em, a third of an interword space; "\\;" is 0.2778em and reads
+  as the same gap the Chinese prose around the formula uses. A gap already
+  carrying a comma or semicolon is dropped instead -- that punctuation is its
+  own separation and stacking both looks loose.
+  """
+  def _punct(m):
+    count[0]+=1
+    return m.group(1)
+  span=TEXT_GAP_LEFT_PUNCT.sub(_punct,span)
+  def _wide(m):
+    count[0]+=1
+    return "\\;"
+  span=TEXT_GAP_LEFT.sub(_wide,span)
+  out=[]
+  pos=0
+  for m in TEXT_MODE.finditer(span):
+    if m.start()<pos:
+      continue
+    end=_brace_group_end(span,m.end()-1)
+    if end is None:
+      continue
+    out.append(span[pos:end])
+    pos=end
+    if span[end:end+2]=="\\,":
+      out.append("\\;")
+      pos=end+2
+      count[0]+=1
+  out.append(span[pos:])
+  return "".join(out)
+
+
+def drop_redundant_thin(span:str,count:list)->str:
+  """",\\," -> ",": the comma already supplies the punctuation space."""
+  def _drop(m):
+    count[0]+=1
+    return m.group(1)
+  return PUNCT_THIN.sub(_drop,span)
+
+
+def convert_span(span:str,pairs:Counter,stagger=None,counts=None)->str:
+  if stagger is None:
+    stagger=[0]
+  if counts is None:
+    counts={"text_gap":[0],"punct_thin":[0]}
   span=protect_text_mode(span)
   prev=None
   while prev!=span:
@@ -275,6 +401,9 @@ def convert_span(span:str,pairs:Counter)->str:
   span=CTRL_SPACE.sub(lambda m: m.group(1)+("," if len(m.group(1))%2 else ""),span)
   # ">x" / "<x" is what space_gt.py just fixed; keep it fixed without a space.
   span=ANGLE_GLUE.sub(r"\1{}\3",span)
+  span=fix_stagger(span,stagger)
+  span=retune_text_gaps(span,counts["text_gap"])
+  span=drop_redundant_thin(span,counts["punct_thin"])
   return "".join(ch for ch in span if ch not in SPACE)
 
 
@@ -287,7 +416,9 @@ def canonical(span:str)->str:
   ("\\\\" -> one marker) so that "\\\\ \\widetilde" and "\\\\\\widetilde" -- the
   same thing before and after the rewrite -- compare equal.
   """
-  s=span.replace("\\,","")
+  s=span
+  for tok in ("\\quad","\\quad","\\;","\\,","\\:","\\!"):
+    s=s.replace(tok,"")
   s=re.sub(r"(\\+)[ \t]",lambda m: m.group(1) if len(m.group(1))%2==0 else m.group(1)[:-1],s)
   while "\\\\" in s:
     s=s.replace("\\\\","\x00")
@@ -314,7 +445,11 @@ def check_span(old:str,new:str)->"str|None":
   return None
 
 
-def convert(text:str,suffix:str=".md")->"tuple[str,int,int,list,Counter,list]":
+def convert(text:str,suffix:str=".md",stagger=None,counts=None)->"tuple[str,int,int,list,Counter,list]":
+  if stagger is None:
+    stagger=[0]
+  if counts is None:
+    counts={"text_gap":[0],"punct_thin":[0]}
   out=[]
   pos=0
   n_space=0
@@ -324,7 +459,7 @@ def convert(text:str,suffix:str=".md")->"tuple[str,int,int,list,Counter,list]":
   body_pairs=[]
   for a,b,ol,cl in math_spans(text,suffix):
     span=text[a:b]
-    new=convert_span(span,pairs)
+    new=convert_span(span,pairs,stagger,counts)
     n_space+=sum(1 for ch in span if ch in SPACE)
     n_shift+=len(CTRL_SPACE.findall(span))
     # "$ $" would collapse to "$$" and silently turn the rest of the paragraph
@@ -355,13 +490,18 @@ def process_file(path:Path,stats=None,dry_run=False,pairs_file=None)->None:
     if stats is not None:
       stats["skipped_encoding"]+=1
     return
-  new,n_space,n_shift,warnings,pairs,body_pairs=convert(text,path.suffix.lower())
+  st=[0]
+  counts={"text_gap":[0],"punct_thin":[0]}
+  new,n_space,n_shift,warnings,pairs,body_pairs=convert(text,path.suffix.lower(),st,counts)
   for w in warnings:
     print(f"Warning: {path.name}: {w}")
   if stats is not None:
     stats["files"]+=1
     stats["pairs"].update(pairs)
     stats["warnings"]+=len(warnings)
+    stats["stagger"]+=st[0]
+    stats["text_gap"]+=counts["text_gap"][0]
+    stats["punct_thin"]+=counts["punct_thin"][0]
     if pairs_file is not None:
       for old_body,new_body in body_pairs:
         if old_body!=new_body:
@@ -387,7 +527,7 @@ def process_file(path:Path,stats=None,dry_run=False,pairs_file=None)->None:
 
 def new_stats()->dict:
   return {"files":0,"changed":0,"space":0,"shift":0,"warnings":0,"rejected":0,
-          "skipped_encoding":0,"pairs":Counter()}
+          "skipped_encoding":0,"stagger":0,"text_gap":0,"punct_thin":0,"pairs":Counter()}
 
 
 def report(stats:dict)->None:
@@ -395,6 +535,12 @@ def report(stats:dict)->None:
   print(f"files read {stats['files']}, changed {stats['changed']}, "
         f"self-check rejected {stats['rejected']}, non-UTF-8 {stats['skipped_encoding']}")
   print(f"whitespace characters removed {stats['space']}, \\  ->\\, {stats['shift']}")
+  if stats["stagger"]:
+    print(f"stacked indices moved onto an empty base (^{{A}}_{{\\,B}} -> ^{{A}}{{}}_{{B}}): {stats['stagger']}")
+  if stats["text_gap"]:
+    print(f"gap next to \\text{{}} retuned to \\; (or dropped after a comma): {stats['text_gap']}")
+  if stats["punct_thin"]:
+    print(f"redundant \\, dropped after a comma/semicolon: {stats['punct_thin']}")
   pairs=stats["pairs"]
   print(f"distinct control-word/next-letter pairs: {len(pairs)}")
   risky=[(f"\\{k[0]} {k[1]}",v) for k,v in pairs.items()

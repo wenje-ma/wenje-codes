@@ -16,7 +16,7 @@
 | Script | What it does | Extra dependency |
 |--------|--------------|------------------|
 | `leftright.py` | Adds `\left` / `\right` to bare brackets, braces and vertical bars inside Markdown math environments | — |
-| `math_space_strip.py` | Removes every whitespace character inside math spans, rewriting `\partial u` as `\partial{u}` and `\sqrt g` as `\sqrt{g}` so the formula still compiles; `\ ` becomes `\,`; keeps `\qquad`, `\quad`, `\,`; leaves fenced code, inline code and TeX comments alone; understands `$…$`, `$$…$$`, `\[…\]`, `\(…\)` and the usual `equation`/`align`/`gather` environments | — |
+| `math_space_strip.py` | Removes every whitespace character inside math spans, rewriting `\partial u` as `\partial{u}` and `\sqrt g` as `\sqrt{g}` so the formula still compiles; `\ ` becomes `\,`; moves a subscript parked behind a thin space onto an empty base (`^{\beta}_{\,B}` → `^{\beta}{}_{B}`); gives the gap beside `\text{…}` the width of body text (`\,` → `\;`, and a `\,` already carrying a comma is dropped); drops `,\,` after a comma as redundant; leaves `\quad` and `\!` untouched (the corpus standardises on `\quad`, so `\qquad` must never be reintroduced); leaves fenced code, inline code and TeX comments alone; understands `$…$`, `$$…$$`, `\[…\]`, `\(…\)` and the usual `equation`/`align`/`gather` environments | — |
 | `run_all.py` | Runs `leftright.py` → `space_gt.py` → `math_space_strip.py` over one folder in that order, then audits for leftover math whitespace | — |
 | `md_merge.py` | Merges the selected Markdown files into a single `document.md` | — |
 | `pdf_OCR.py` | OCRs scanned PDFs and writes a searchable-text copy `_ocr.pdf` | PyMuPDF, rapidocr-onnxruntime |
