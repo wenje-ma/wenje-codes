@@ -38,7 +38,7 @@ def split_pdf(pdf_path:str,limit_bytes:int=DEFAULT_LIMIT_BYTES,out_dir:Path|None
     raise FileNotFoundError(f"File not found: {pdf_file}")
   if pdf_file.stat().st_size<limit_bytes:
     print(f"No split needed: {pdf_file.name} ({pdf_file.stat().st_size/1048576:.1f}MB < limit {limit_bytes/1048576:.0f}MB)",flush=True)
-    return [str(pdf_file)]
+    return[str(pdf_file)]
   if out_dir is None:
     out_dir=pdf_file.parent
   out_dir.mkdir(exist_ok=True)

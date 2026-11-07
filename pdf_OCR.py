@@ -51,7 +51,7 @@ def select_and_convert_pdfs():
     selected=filedialog.askopenfilenames(
       title='Select PDF files (multi-select; reselect for cross-folder, cancel to stop)',
       filetypes=[('PDF files','*.pdf'),('All Files','*.*')]
-    )
+)
     if selected:
       for f in selected:
         p=Path(f)
@@ -69,7 +69,7 @@ def select_and_convert_pdfs():
       break
   if not targets:
     print('No PDF file selected, exit.')
-    return []
+    return[]
   converted=[]
   for pdf_path in targets:
     output=ocr_pdf(str(pdf_path))

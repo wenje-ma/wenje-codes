@@ -50,8 +50,8 @@ def select_and_merge_md():
       break
   if not targets:
     print("No Markdown file selected, exit.")
-    return []
+    return[]
   merged_output=merge_markdown_files([str(p) for p in targets])
-  return [merged_output]
+  return[merged_output]
 if __name__=="__main__":
   select_and_merge_md()

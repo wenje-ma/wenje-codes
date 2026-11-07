@@ -44,9 +44,9 @@ def convert_span(span:str)->str:
       span=span[:m.start()]+lr+tok+span[m.end():]
   def repl(m):
     s=m.group(0)
-    if s in("(", "["):
+    if s in("(","["):
       return "\\left"+s
-    if s in(")", "]"):
+    if s in(")","]"):
       return "\\right"+s
     if s=="\\{":
       return "\\left\\{"
@@ -95,14 +95,14 @@ def select_folder_and_convert_mds():
   folder=filedialog.askdirectory(title="Select folder (recursively processes .md/.qmd/.tex)")
   if not folder:
     print("No folder selected, exit.")
-    return []
+    return[]
   folder_path=Path(folder)
   exts=(".md",".qmd",".tex")
   targets=[p for p in folder_path.rglob("*") if p.is_file() and p.suffix.lower() in exts]
   targets.sort(key=lambda p: str(p).lower())
   if not targets:
     print(f"No .md/.qmd/.tex files in folder: {folder_path}")
-    return []
+    return[]
   print(f"Found {len(targets)} target files, converting...")
   for md_path in targets:
     process_file(md_path)

@@ -2,6 +2,8 @@
 
 > A small toolbox of Python 3 utilities for batch-processing Markdown and PDF files, all driven by native `tkinter` file dialogs: pick files from multiple folders, then process them in one go.
 
+Conventions for the corpus itself — math spacing, symbol choice, writing rules — live in [`STYLE.md`](STYLE.md).
+
 ## Requirements
 
 - Python 3.8+ with Tkinter (standard on Windows builds);

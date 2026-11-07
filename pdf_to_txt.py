@@ -41,7 +41,7 @@ def select_and_convert_pdfs():
       break
   if not targets:
     print('No file selected, exit.')
-    return []
+    return[]
   converted=[]
   for pdf_path in targets:
     output=pdf_to_txt(str(pdf_path))

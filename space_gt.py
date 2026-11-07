@@ -3,18 +3,9 @@ import sys
 from pathlib import Path
 from tkinter import Tk,filedialog
 
-# Insert one space after every '>' or '<' that is glued to a following character,
-# so that a renderer (e.g. the WeChat editor) never reads ">x" / "<x" as the start
-# of an HTML tag and swallows the rest of the paragraph. Math is therefore *not*
-# protected: "$a>b$" -> "$a> b$" is exactly the point of this script (LaTeX ignores
-# the extra space after a relation).
-# Only real markup is carved out as a "protected span" and left verbatim: HTML
-# tags, comments, autolinks, code spans / fenced code, YAML front matter.
 ANGLE_AFTER=re.compile(r"(>|<)(?![ \t\r\n\f\v]|$)")
 WHITESPACE=" \t\r\n\f\v"
 
-# Only names that really are markup get tag treatment; a bare <x> in prose/maths
-# would otherwise be swallowed and lose its space.
 HTML_TAGS=frozenset("""
 a abbr address area article aside audio b base bdi bdo big blockquote body br button
 canvas caption center cite code col colgroup data dd del details dfn dialog div dl dt
@@ -37,17 +28,13 @@ AUTOLINK=re.compile(r"<[A-Za-z][A-Za-z0-9+.\-]*:[^<>\s]*>")
 EMAIL_LINK=re.compile(r"<[^<>\s@]+@[^<>\s@]+>")
 BLANK_LINE=re.compile(r"\n[ \t\r]*\n")
 
-
 def _line_prefix_blank(text:str,i:int)->bool:
-  """True when nothing but spaces/tabs stands between i and the start of its line."""
   j=i
   while j>0 and text[j-1] in " \t":
     j-=1
   return j==0 or text[j-1]=="\n"
 
-
 def _fence_end(text:str,i:int)->"int|None":
-  """End offset of a complete ```/~~~ block starting at i, else None."""
   c=text[i]
   j=i
   while j<len(text) and text[j]==c: j+=1
@@ -64,9 +51,7 @@ def _fence_end(text:str,i:int)->"int|None":
   m=closer.search(text,eol+1)
   return None if m is None else m.end()
 
-
 def _code_span_end(text:str,i:int)->"int|None":
-  """End offset of a `code span` opening at i; never crosses a blank line."""
   j=i
   while j<len(text) and text[j]=="`": j+=1
   run=j-i
@@ -78,13 +63,7 @@ def _code_span_end(text:str,i:int)->"int|None":
     return None
   return m.end()
 
-
 def _tag_end(text:str,i:int)->"int|None":
-  """End offset of a complete HTML/XML tag at i, else None.
-
-  Unknown element names are accepted only when the tag carries an attribute or is
-  a closing tag, so that plain <x> prose keeps being treated as text.
-  """
   if text.startswith("<!--",i):
     k=text.find("-->",i+4)
     return None if k<0 else k+3
@@ -99,9 +78,9 @@ def _tag_end(text:str,i:int)->"int|None":
   while j<n:
     c=text[j]
     if c==">":
-      return j+1 if (known or closing or has_attr) else None
+      return j+1 if(known or closing or has_attr) else None
     if c=="/" and text.startswith("/>",j):
-      return j+2 if (known or closing or has_attr) else None
+      return j+2 if(known or closing or has_attr) else None
     if c in WHITESPACE:
       j+=1
       continue
@@ -125,27 +104,21 @@ def _tag_end(text:str,i:int)->"int|None":
         j=vm.end()
   return None
 
-
 def _angle_end(text:str,i:int)->"int|None":
-  """End offset of any '<'-construct that must stay verbatim."""
-  for pat in (AUTOLINK,EMAIL_LINK):
+  for pat in(AUTOLINK,EMAIL_LINK):
     m=pat.match(text,i)
     if m is not None:
       return m.end()
   return _tag_end(text,i)
 
-
 def _front_matter_end(text:str)->int:
-  """End offset of a leading YAML front matter block, 0 when there is none."""
   m=FRONT_MATTER_OPEN.match(text)
   if m is None:
     return 0
   k=FRONT_MATTER_CLOSE.search(text,m.end()-1)
   return 0 if k is None else k.end()
 
-
 def protected_spans(text:str)->"list":
-  """Non-overlapping [start,end) ranges that must be copied verbatim."""
   spans=[]
   start=_front_matter_end(text)
   if start:
@@ -176,7 +149,6 @@ def protected_spans(text:str)->"list":
     i+=1
   return spans
 
-
 def convert(text:str)->"tuple[str,int]":
   spans=protected_spans(text)
   parts=[]
@@ -195,7 +167,6 @@ def convert(text:str)->"tuple[str,int]":
   parts.append(seg)
   return "".join(parts),total
 
-
 def process_file(path:Path)->None:
   raw=path.read_bytes()
   bom=raw.startswith(b"\xef\xbb\xbf")
@@ -211,7 +182,6 @@ def process_file(path:Path)->None:
     return
   path.write_bytes((("\ufeff" if bom else "")+new).encode("utf-8"))
   print(f"Converted: {path}  (+space x{n})")
-
 
 def process_folder(folder:str)->None:
   folder_path=Path(folder)
@@ -229,7 +199,6 @@ def process_folder(folder:str)->None:
     process_file(md_path)
   print(f"Done, processed {len(targets)} files.")
 
-
 def select_folder_and_convert()->None:
   root=Tk()
   root.withdraw()
@@ -238,7 +207,6 @@ def select_folder_and_convert()->None:
     print("No folder selected, exit.")
     return
   process_folder(folder)
-
 
 if __name__=="__main__":
   if len(sys.argv)>1:

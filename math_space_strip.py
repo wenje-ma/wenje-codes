@@ -7,45 +7,9 @@ from collections import Counter
 from pathlib import Path
 from tkinter import Tk,filedialog
 
-# Remove every whitespace character inside math spans, so "$a b$" becomes "$ab$".
-#
-# A space right after a control word is the *terminator* of that word, so
-# "\partial u" must never become "\partialu" (an undefined command that kills the
-# formula). The following letter is wrapped in braces instead:
-#   "\partial u" -> "\partial{u}"
-#   "\sqrt g"    -> "\sqrt{g}"
-#   "\mathrm d"  -> "\mathrm{d}"
-# Braces around a single token are semantically neutral for a command that takes
-# no argument (a transparent group) and exactly right for one that does. The only
-# measurable side effect is a lost italic correction on the wrapped letter
-# (<=0.04em, about 0.4px at 12px), which is uniform across the whole file.
-# Only *letters* are wrapped: after "(" or ">" or "+" the control word already
-# ends by itself, so "\big (" just becomes "\big(" without any braces.
-#
-# "\ " (backslash-space, e.g. "\delta^{\alpha}_{\ \gamma}") becomes "\," so the
-# shifted-index look survives without a real space character.
-#
-# Deliberately kept, never rewritten: "\quad", "\quad" (side-by-side layout),
-# "\!" (the overlap in "R[\![t]\!]"), and "\," wherever it still carries meaning:
-# before a differential or unit, between two factors, before a condition.
-#
-# "\," next to \text{...} becomes "\;" instead, so the gap between a formula and
-# an annotation has the width of an interword space in the surrounding text
-# (0.2778em, against 0.1667em for "\,"). ", \," is dropped outright: the comma
-# already ends the list item with its own punctuation space.
-#
-# Protected regions are never touched: fenced code blocks, inline code, TeX
-# comments. Math is recognised in $...$, $$...$$, \[...\], \(...\) and, in .tex
-# files, the numbered/display environments listed in TEX_ENVS.
-#
-# Self-check before writing: no whitespace left, no new control word, and the
-# token stream unchanged once braces, "\," and "~" are ignored. A file failing
-# the check is reported and left untouched.
 SPACE=" \t\u00a0\u3000"
 CTRL_SPACE=re.compile(r"(\\+)([ \t])")
 CTRL_GLUE=re.compile(r"\\([A-Za-z]+)([ \t]+)([A-Za-z])")
-# "\partial{}u" left behind by an earlier pass, or written by hand to end a
-# command: normalise to the single canonical "\partial{u}" form.
 EMPTY_GLUE=re.compile(r"\\([A-Za-z]+)\{\}([A-Za-z])")
 CTRL_TRAIL=re.compile(r"\\([A-Za-z]+)([ \t]+)")
 ANGLE_GLUE=re.compile(r"([<>])([ \t]+)([A-Za-z])")
@@ -56,10 +20,7 @@ TEX_ENVS=("equation","equation*","align","align*","alignat","alignat*","gather",
           "gather*","multline","multline*","eqnarray","eqnarray*","displaymath",
           "math","flalign","flalign*")
 
-
-# ---------------------------------------------------------------- protected regions
 def fenced_ranges(text:str)->"list[tuple[int,int]]":
-  """Ranges covered by ``` / ~~~ fenced code blocks, delimiter lines included."""
   ranges=[]
   i,n=0,len(text)
   opened=None
@@ -81,9 +42,7 @@ def fenced_ranges(text:str)->"list[tuple[int,int]]":
     ranges.append((opened,n))
   return ranges
 
-
 def inline_code_ranges(text:str,mask:bytearray)->"list[tuple[int,int]]":
-  """Ranges of `code` spans whose backtick runs pair up; positions already masked are skipped."""
   ranges=[]
   i,n=0,len(text)
   while i<n:
@@ -112,9 +71,7 @@ def inline_code_ranges(text:str,mask:bytearray)->"list[tuple[int,int]]":
       i+=k
   return ranges
 
-
 def tex_comment_ranges(text:str)->"list[tuple[int,int]]":
-  """% to end of line, unless escaped by an odd number of backslashes."""
   ranges=[]
   i,n=0,len(text)
   while i<n:
@@ -130,7 +87,6 @@ def tex_comment_ranges(text:str)->"list[tuple[int,int]]":
     i+=1
   return ranges
 
-
 def skip_mask(text:str,suffix:str)->bytearray:
   mask=bytearray(len(text))
   ranges=fenced_ranges(text)
@@ -142,10 +98,7 @@ def skip_mask(text:str,suffix:str)->bytearray:
     mask[a:b]=b"\x01"*(b-a)
   return mask
 
-
-# ---------------------------------------------------------------- math spans
 def _env_span(text:str,i:int,name:str,mask:bytearray):
-  """End offset of \\begin{name} ... \\end{name}, or None (depth counted)."""
   begin="\\begin{"+name+"}"
   end="\\end{"+name+"}"
   depth=1
@@ -165,9 +118,7 @@ def _env_span(text:str,i:int,name:str,mask:bytearray):
     j+=1
   return None
 
-
 def math_spans(text:str,suffix:str=".md")->"list[tuple[int,int,int,int]]":
-  """(start, end, open_len, close_len) for every math span, scanning left to right."""
   mask=skip_mask(text,suffix)
   spans=[]
   i,n=0,len(text)
@@ -225,9 +176,7 @@ def math_spans(text:str,suffix:str=".md")->"list[tuple[int,int,int,int]]":
     i+=1
   return spans
 
-
 def _brace_group_end(text:str,i:int):
-  """End offset of the {...} group opening at i (i points at '{'), or None."""
   depth=0
   n=len(text)
   while i<n:
@@ -244,9 +193,7 @@ def _brace_group_end(text:str,i:int):
     i+=1
   return None
 
-
 def protect_text_mode(span:str)->str:
-  """Inside \\text{...} a space means a real word gap, so it becomes '~' instead."""
   parts=[]
   pos=0
   for m in TEXT_MODE.finditer(span):
@@ -263,7 +210,6 @@ def protect_text_mode(span:str)->str:
   parts.append(span[pos:])
   return "".join(parts)
 
-
 STAGGER_LEAD=re.compile(r"(?:\\[,;:>]|\\quad|\\quad|\\ |~|\s)+")
 
 TEXT_GAP_LEFT_PUNCT=re.compile(
@@ -272,9 +218,7 @@ TEXT_GAP_LEFT=re.compile(
   r"\\,(?=\\(?:text|mbox|textrm|textnormal|intertext|hbox)\s*\{)")
 PUNCT_THIN=re.compile(r"([,;])(?:\\,)+")
 
-
 def _atom_end(s:str,i:int)->int:
-  """s[i] starts a TeX argument: a {...} group, a control word, or one char."""
   if i>=len(s):
     return -1
   if s[i]=="{":
@@ -299,15 +243,7 @@ def _atom_end(s:str,i:int)->int:
     return j if j>i+1 else min(i+2,len(s))
   return i+1
 
-
 def fix_stagger(span:str,count:list)->str:
-  """`^{A}_{\\,B}` -> `^{A}{}_{B}`.
-
-  A thin space at the head of the subscript only shifts the glyph inside a
-  subscript box that still hangs directly under the superscript, so the two
-  indices stay stacked. Attaching the subscript to an empty base after the
-  superscript is the construction that really offsets it.
-  """
   out=[]
   i,n=0,len(span)
   while i<n:
@@ -337,15 +273,7 @@ def fix_stagger(span:str,count:list)->str:
     i+=1
   return "".join(out)
 
-
 def retune_text_gaps(span:str,count:list)->str:
-  """Give the gap between a formula and \\text{...} the width of body text.
-
-  "\\," is 0.1667em, a third of an interword space; "\\;" is 0.2778em and reads
-  as the same gap the Chinese prose around the formula uses. A gap already
-  carrying a comma or semicolon is dropped instead -- that punctuation is its
-  own separation and stacking both looks loose.
-  """
   def _punct(m):
     count[0]+=1
     return m.group(1)
@@ -371,14 +299,11 @@ def retune_text_gaps(span:str,count:list)->str:
   out.append(span[pos:])
   return "".join(out)
 
-
 def drop_redundant_thin(span:str,count:list)->str:
-  """",\\," -> ",": the comma already supplies the punctuation space."""
   def _drop(m):
     count[0]+=1
     return m.group(1)
   return PUNCT_THIN.sub(_drop,span)
-
 
 def convert_span(span:str,pairs:Counter,stagger=None,counts=None)->str:
   if stagger is None:
@@ -399,41 +324,27 @@ def convert_span(span:str,pairs:Counter,stagger=None,counts=None)->str:
     return "\\"+m.group(1)+"{"+m.group(2)+"}"
   span=EMPTY_GLUE.sub(_empty,span)
   span=CTRL_SPACE.sub(lambda m: m.group(1)+("," if len(m.group(1))%2 else ""),span)
-  # ">x" / "<x" is what space_gt.py just fixed; keep it fixed without a space.
   span=ANGLE_GLUE.sub(r"\1{}\3",span)
   span=fix_stagger(span,stagger)
   span=retune_text_gaps(span,counts["text_gap"])
   span=drop_redundant_thin(span,counts["punct_thin"])
   return "".join(ch for ch in span if ch not in SPACE)
 
-
 def canonical(span:str)->str:
-  """Form that ignores everything the rewrite may legally add or drop.
-
-  A space right after a control word disappears, and "\\ " becomes "\\,": both
-  are already expressed above by dropping "\\," and by trimming one backslash
-  when an odd run of them is followed by a space. Line breaks are then folded
-  ("\\\\" -> one marker) so that "\\\\ \\widetilde" and "\\\\\\widetilde" -- the
-  same thing before and after the rewrite -- compare equal.
-  """
   s=span
-  for tok in ("\\quad","\\quad","\\;","\\,","\\:","\\!"):
+  for tok in("\\quad","\\quad","\\;","\\,","\\:","\\!"):
     s=s.replace(tok,"")
   s=re.sub(r"(\\+)[ \t]",lambda m: m.group(1) if len(m.group(1))%2==0 else m.group(1)[:-1],s)
   while "\\\\" in s:
     s=s.replace("\\\\","\x00")
   return "".join(ch for ch in s if ch not in "{}~" and ch not in SPACE)
 
-
 def check_span(old:str,new:str)->"str|None":
-  """Reason string when the rewrite may have broken the formula, else None."""
   left=[ch for ch in new if ch in SPACE]
   if left:
     return f"whitespace left: {left[:3]!r}"
   a=canonical(old)
   b=canonical(new)
-  # a mashed command ("\\partialu") is invisible to the token comparison, so
-  # control words are compared on the folded form as well
   new_words=set(re.findall(r"\\([A-Za-z]+)",b))-set(re.findall(r"\\([A-Za-z]+)",a))
   if new_words:
     return f"new control words: {sorted(new_words)[:4]}"
@@ -443,7 +354,6 @@ def check_span(old:str,new:str)->"str|None":
       k+=1
     return f"token stream changed near ...{a[max(0,k-12):k+12]!r} -> ...{b[max(0,k-12):k+12]!r}"
   return None
-
 
 def convert(text:str,suffix:str=".md",stagger=None,counts=None)->"tuple[str,int,int,list,Counter,list]":
   if stagger is None:
@@ -462,8 +372,6 @@ def convert(text:str,suffix:str=".md",stagger=None,counts=None)->"tuple[str,int,
     new=convert_span(span,pairs,stagger,counts)
     n_space+=sum(1 for ch in span if ch in SPACE)
     n_shift+=len(CTRL_SPACE.findall(span))
-    # "$ $" would collapse to "$$" and silently turn the rest of the paragraph
-    # into display math; keep the gap as "\," instead.
     body=span[ol:len(span)-cl]
     if body and body.strip(SPACE)=="":
       new=span[:ol]+"\\,"+span[len(span)-cl:]
@@ -477,7 +385,6 @@ def convert(text:str,suffix:str=".md",stagger=None,counts=None)->"tuple[str,int,
     pos=b
   out.append(text[pos:])
   return "".join(out),n_space,n_shift,warnings,pairs,body_pairs
-
 
 def process_file(path:Path,stats=None,dry_run=False,pairs_file=None)->None:
   raw=path.read_bytes()
@@ -524,11 +431,9 @@ def process_file(path:Path,stats=None,dry_run=False,pairs_file=None)->None:
   else:
     print(f"Would convert: {path}  (-space x{n_space}, \\  ->\\, x{n_shift})")
 
-
 def new_stats()->dict:
   return {"files":0,"changed":0,"space":0,"shift":0,"warnings":0,"rejected":0,
           "skipped_encoding":0,"stagger":0,"text_gap":0,"punct_thin":0,"pairs":Counter()}
-
 
 def report(stats:dict)->None:
   print("---- summary ----")
@@ -544,10 +449,9 @@ def report(stats:dict)->None:
   pairs=stats["pairs"]
   print(f"distinct control-word/next-letter pairs: {len(pairs)}")
   risky=[(f"\\{k[0]} {k[1]}",v) for k,v in pairs.items()
-         if k[0] in ("big","Big","bigg","Bigg","bigl","bigr","Bigl","Bigr","bigg l","left","right")]
+        if k[0] in("big","Big","bigg","Bigg","bigl","bigr","Bigl","Bigr","bigg l","left","right")]
   if risky:
-    print("  delimiter-like commands seen:", sorted(risky,key=lambda x:-x[1])[:10])
-
+    print("  delimiter-like commands seen:",sorted(risky,key=lambda x:-x[1])[:10])
 
 def process_folder(folder:str,dry_run=False,pairs_path=None)->None:
   folder_path=Path(folder)
@@ -572,7 +476,6 @@ def process_folder(folder:str,dry_run=False,pairs_path=None)->None:
   report(stats)
   print(f"Done, processed {len(targets)} files.")
 
-
 def select_folder_and_convert(**kw)->None:
   root=Tk()
   root.withdraw()
@@ -581,7 +484,6 @@ def select_folder_and_convert(**kw)->None:
     print("No folder selected, exit.")
     return
   process_folder(folder,**kw)
-
 
 if __name__=="__main__":
   ap=argparse.ArgumentParser(description="Strip whitespace inside math spans.")
