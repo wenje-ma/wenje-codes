@@ -53,3 +53,6 @@
 - 微分几何作业集:`D:\wenje-ma\differential-geometry\homework-cn\week6.md`,`week7.md`.
 - 微分几何条目库:`D:\wenje-ma\wenjemaths\forced\dg-mid.md`(按章编号, 引用前先核对条目原文与编号).
 - 公式改写工具链:`D:\wenje-ma\wenje-codes\run_all.py`(`leftright.py` → `space_gt.py` → `math_space_strip.py`); 标点另跑 `cn_punct.py`.
+- Minecraft 实例(anything form nothing,1.20.1 + Embeddium 0.3.31 + Oculus 1.8.0):`D:\Minecraft\.minecraft\versions\anything form nothing`;光影放其下 `shaderpacks`.
+- Minecraft 备份目录:`D:\Minecraft\_backup\anything-form-nothing-<时间戳>`(含 `saves`,`config`,`kubejs`,`options.txt`);`latest.txt` 记最新一份.
+- 堆叠模组已由 Overstack 换成 All Stacks Infinite 14.3.0.11,配置 `config\All-Stacks-Infinite.toml`(`global_stack_size=99000000`,`experimental=false`,附魔类物品走 `[items_custom_stack_size]` 压回 1).
