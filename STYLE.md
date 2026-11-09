@@ -43,6 +43,10 @@
 - 代码块, 行内代码与 `.tex` 的 `%` 注释不动; 那里出现中文标点不算违规.
 - 工具:`D:\wenje-ma\wenje-codes\cn_punct.py`, 幂等, 先 `--dry-run` 看改动数再实跑.
 
+## 编辑器
+
+- VSCode 分词:`_` 与 `^` 连着的左右两段算一个整体, 双击, 按词移动, 基于文档的词补全都按整体走. 词补全只认语言配置的 `wordPattern`, `editor.wordSeparators` 管不到它, 所以 `~\.vscode\extensions\wenje.caret-txt-0.0.1` 注册语言 `wenje-plaintext`(`wordPattern` 里删掉 `^`), 再由 settings 的 `files.associations` 把 `*.txt` 指过去; `editor.wordSeparators` 里的 `^` 一并删掉, 双击与按词移动才跟补全一致.
+
 ## 工作方式
 
 - 有疑问先提问, 允许质疑和否定, 尽量减少返工.
@@ -57,3 +61,5 @@
 - Minecraft 备份目录:`D:\Minecraft\_backup\anything-form-nothing-<时间戳>`(含 `saves`,`config`,`kubejs`,`options.txt`);`latest.txt` 记最新一份.
 - 堆叠模组已由 Overstack 换成 All Stacks Infinite 14.3.0.11,配置 `config\All-Stacks-Infinite.toml`(`global_stack_size=99000000`,`experimental=false`,附魔类物品走 `[items_custom_stack_size]` 压回 1).
 - Minecraft 实例(magic,1.21.1 + NeoForge 21.1.265):`D:\Minecraft\.minecraft\versions\magic`;堆叠模组 All Stacks Infinite 14.1.0.11,配置 `config\All-Stacks-Infinite.toml`(`global_stack_size=99000000`,`experimental=false`),68 个可附魔物品走 `[items_custom_stack_size]` 压回 1,名单取 `minecraft:enchantable/*` 物品标签并集加 `enchanted_book`.
+- HMCL 版本图标:在版本根目录放 `icon.png`(png/jpg/jpeg/bmp/gif/webp 皆可, 按 64 像素加载, 图最好 64 或 64 的整数倍);`versions\<实例>\.hmcl\config\instance-game-settings.json` 里的 `icon` 字段只管内置图标, 存在图标文件时优先用文件.
+- 物品图标素材:游戏本体与模组 jar 内 `assets\<命名空间>\textures\item\*.png` 即 16x16 原图, 直接解压加最近邻放大即可, 不必进游戏截图.
