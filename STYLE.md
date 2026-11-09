@@ -55,6 +55,7 @@
 ## 常用位置
 
 - 微分几何作业集:`D:\wenje-ma\differential-geometry\homework-cn\week6.md`,`week7.md`.
+- 交接文档(给同学及其 AI, 讲装 Git/VSCode/MPE 并克隆全部仓库):`D:\wenje-ma\wenjemaths\tutorial\tutorial.md`.
 - 微分几何条目库:`D:\wenje-ma\wenjemaths\forced\dg-mid.md`(按章编号, 引用前先核对条目原文与编号).
 - 公式改写工具链:`D:\wenje-ma\wenje-codes\run_all.py`(`leftright.py` → `space_gt.py` → `math_space_strip.py`); 标点另跑 `cn_punct.py`.
 - Minecraft 实例(anything form nothing,1.20.1 + Embeddium 0.3.31 + Oculus 1.8.0):`D:\Minecraft\.minecraft\versions\anything form nothing`;光影放其下 `shaderpacks`.
