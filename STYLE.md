@@ -45,6 +45,7 @@
 
 ## 编辑器
 
+- LaTeX 的 PDF 不留在 VSCode 标签里看, 一律外置 `D:\SumatraPDF\SumatraPDF.exe`. `settings.json`: `latex-workshop.view.pdf.viewer` 为 `external`, `...external.viewer.command` 指 SumatraPDF, `...external.viewer.args` 为 `-reuse-instance`,`-inverse-search`,`"D:/Microsoft VS Code/bin/code.cmd" -g "%f:%l"`,`%PDF%`; `...external.synctex.command` 同上, `...external.synctex.args` 为 `-reuse-instance`,`-forward-search`,`%TEX%`,`%LINE%`,`%PDF%`. 正向: VSCode 里 "SyncTeX from cursor"; 反向: SumatraPDF 里双击(走的是 `code.cmd`, 会闪一下控制台). 前提是编译带 `-synctex=1`, 且 `autoBuild.run` 是 `never`, 要先手动编译.
 - VSCode 分词:`_` 与 `^` 连着的左右两段算一个整体, 双击, 按词移动, 基于文档的词补全都按整体走. 词补全只认语言配置的 `wordPattern`, `editor.wordSeparators` 管不到它, 所以 `~\.vscode\extensions\wenje.caret-txt-0.0.1` 注册语言 `wenje-plaintext`(`wordPattern` 里删掉 `^`), 再由 settings 的 `files.associations` 把 `*.txt` 指过去; `editor.wordSeparators` 里的 `^` 一并删掉, 双击与按词移动才跟补全一致.
 
 ## 工作方式
@@ -55,6 +56,7 @@
 ## 常用位置
 
 - 微分几何作业集:`D:\wenje-ma\differential-geometry\homework-cn\week6.md`,`week7.md`.
+- 书稿(英文, Quarto book, 只出 PDF):`D:\wenje-ma\ed4dse\tex`;骨架 `_quarto.yml`,`preamble.tex`,`index.qmd`,`chapters/`;编译在 `tex` 下跑 `quarto render`,产物 `_book\Experimental-Design-for-Data-Science-and-Engineering.pdf`;图从章内引 `../../figures\N.M.pdf`;结构与引用写法见 `tex\README.md`.
 - 交接文档(给同学及其 AI, 讲装 Git/VSCode/MPE 并克隆全部仓库):`D:\wenje-ma\wenjemaths\tutorial\tutorial.md`.
 - 微分几何条目库:`D:\wenje-ma\wenjemaths\forced\dg-mid.md`(按章编号, 引用前先核对条目原文与编号).
 - 公式改写工具链:`D:\wenje-ma\wenje-codes\run_all.py`(`leftright.py` → `space_gt.py` → `math_space_strip.py`); 标点另跑 `cn_punct.py`.
