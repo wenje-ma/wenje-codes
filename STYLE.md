@@ -14,13 +14,17 @@
 - 上下标要错开时写 `^{A}{}_{B}`, 不用 `^{A}_{\,B}`(`\,` 只把字形右推, 下标仍压在上标正下方).
 - `\!` 保持原样——`R[\![t]\!]` 的双括号靠它收紧.
 - 控制词后接字母一律加大括号:`\partial{u}`,`\sqrt{g}`,`\mathrm{d}`; 不写空参数 `\partial{}u`.
+- 矩阵与向量一律加粗, 记号统一 `\boldsymbol{}`(斜粗, 不用 `\mathbf`,`\bm`). 矩阵指 `M_n`,`GL(n,\cdot)`,`SO(n)`,`diag` 之下的元素; 向量指 `\mathbb{R}^n`,`\mathbb{R}^2`,`C^n`,`K^n` 这类坐标空间中的点与向量, 包括 `\left\|x\right\|`,`x+y`,`\left(1-t\right)x+ty`,`\left[x,y\right]` 这种按分量或线性运算使用的场合. 下标照常:`\boldsymbol{M}_p`,`\boldsymbol{v}_\lambda`,`\boldsymbol{x}_n`,`\boldsymbol{D}_t`.
+- 以下一律不加粗: 标量; 集合与空间名(`K`,`A`,`E`,`\mathbb{R}^n`,`GL(n,\mathbb{R})`); 映射, 函数, 算子(即使在 `L(E,F)` 里, 也含路径与曲线 `\gamma`); 抽象赋范/拓扑向量空间与序列空间 `E`,`F`,`l^p`,`l^\infty`,`C([0,1])` 里的元素(按抽象点处理, 不逐个加粗); 元素分量 `v_i` 与矩阵元 `T_{ij}`; 点对与元组 `\left(x,y\right)`,`\left(u,v\right)`.`
 
 ## 文档写作
 
 - 抄写原题; 解答中任意相邻两句都能由上一句推出, 不跳步.
 - 数学作业集文首引用库只收书内带编号条目, 正文引用须加粗条目名. 先写解答, 解答里用到哪条就把哪条抄到文首: 解答没加粗引用的条目一律不写, 不论与本周末章多相关.
 - 教材里的任何文字——定义, 定理, 公式, 例题, 习题结论——都可作为现成结论直接引用使用, 不在解答中重新推导; 只交代它为何用得上, 不重算一遍.
+- 证明按子结论收尾: 一题里有几个独立结论(必要性/充分性, 上界/下界, 各小问), 就各标一次 `$\blacksquare$`, 不等到全题结束才标一次, 末尾也不补第三次. 此条适用于全部泛函作业, 老周次一并回改.
 - 一切学科的整理文档里, 加粗只用于引用编号条目, 步骤标签等不加粗.
+- 正文只写题目与推导, 不写依据说明, 心得, 旁注; 正文里不出现 `>` 引用块(引用块只用于文首条目库).
 - 英文人名一律改中文译名, 不保留英文原名.
 - 笔记与教材不符处, 悄悄按教材改掉, 不写差异说明.
 - 微分几何: 文首公式条目内附来历推导; 正文不重复推导, 也不另加骨架小节.
@@ -70,3 +74,4 @@
 - VSCode Java:扩展 `vscjava.vscode-java-pack`(`redhat.java` 1.58.0, JDT LS 3.48, 支持 Java 25);`settings.json` 里 `java.jdt.ls.java.home` 与 `java.configuration.runtimes`(`JavaSE-25`, `default`)都指 `D:\MicrosoftJDK`;格式化 profile 取 `GoogleStyle`,`[java]` 缩进 2 格并关掉 `detectIndentation`;保存只整理 import, 不自动格式化和不自动组织代码.
 - VSCode Java 卡在 "Loading Java progress" 的根因:JDT LS 导入 `D:\wenje-ma` 下 `SpellEngine` 与 `wizards` 时, Gradle wrapper 要先下载发行包, 而 `services.gradle.org` 307 跳到 GitHub release assets, 国内实测 30 KB/s, 每次 4 分钟超时后无限重试. 已把 Gradle 8.14 预置进 `C:\Users\wenje\.gradle\wrapper\dists\gradle-8.14-bin\38aieal9i53h9rfe7vjup95b9`(解压目录 `gradle-8.14` 加空标记文件 `gradle-8.14-bin.zip.ok`, wrapper 见到标记即跳过下载), `D:\wenje-ma\SpellEngine\gradlew.bat --version` 528 ms 通过. 之后换 gradle 版本用 `https://mirrors.huaweicloud.com/gradle/gradle-<版本>-bin.zip`(1-4 MB/s) 或 `mirrors.cloud.tencent.com/gradle`, 不要用官方链接.
 - Gradle 当前版本状态:`SpellEngine` 的 wrapper 于 2026-11-11 11:15 自行升到 9.7.1(dist 已完整装在 `dists\gradle-9.7.1-bin`, 带 `.ok`), `wizards` 仍用 8.14; `gradlew help` 在 9.7.1 上 16 秒通过, Architectury Loom 1.11.458 正常加载, 只报 "incompatible with Gradle 10" 的弃用警告. 回退只需把 `gradle\wrapper\gradle-wrapper.properties` 的 `distributionUrl` 改回 8.14(8.14 的预置仍在, 不会再下载). 两个工程版本分叉会同时跑两套 daemon, 尽量对齐.
+- 2026-11-11 已彻底移除 VSCode 的 Java 支持:`vscjava.vscode-java-pack` 连同 `redhat.java`,`vscjava.vscode-gradle`,`java-debug`,`java-test`,`java-dependency`,`vscjava.vscode-maven` 一并卸载并删掉扩展目录, `settings.json` 里整段 `java.*` 与 `[java]` 也删了, 同时删掉 `C:\Users\wenje\.gradle`(1012 MB) 与 `globalStorage\redhat.java`(18 MB). 以后不要在 VSCode 里开 Java/Gradle 工程; 若要用命令行构建 `wizards` 或 `SpellEngine`, Gradle 依赖需重新下载(约 1 GB). `SpellEngine` 源码与改 `wizards` 无关: `wizards` 走的是 `maven.modrinth:spell-engine:1.10.0+1.21.1` 成品 jar, 只有要同步改 SpellEngine 本身时才需要它.
