@@ -9,7 +9,7 @@ Conventions for the corpus itself — math spacing, symbol choice, writing rules
 - Python 3.8+ with Tkinter (standard on Windows builds);
 - Per-script extras, installed as needed:
   ```sh
-  pip install PyMuPDF rapidocr-onnxruntime pypdf
+  pip install PyMuPDF pypdf
   ```
 - `pdf_to_svg.py` additionally requires the external command-line tool [`pdf2svg`](https://github.com/dawbarton/pdf2svg) (looked up by default under `C:\rtools45\mingw64\bin\`).
 
@@ -22,8 +22,8 @@ Conventions for the corpus itself — math spacing, symbol choice, writing rules
 | `auto_typesetting.py` | Runs `leftright.py` → `math_space_strip.py` over one file or folder in that order, then audits for leftover math whitespace and for a `<` still glued to a letter; a file whose stage raises or fails its self-check is restored from its pre-run bytes | — |
 | `cn_punct.py` | Turns every full-width and CJK punctuation mark outside code into its half-width ASCII form, spaced like English text (`，`→`,`, `（`→` (`, `）`→`) `, `《》`→`"`, `…`→`...`, `　`→ a plain space); also halves full-width letters, digits and operators left by OCR; keeps the em dash `—` and the interpunct `·`; downgrades quotes inside YAML front matter to `'` so the block still parses; never adds a space inside a math span | — |
 | `md_merge.py` | Merges the selected Markdown files into a single `document.md` | — |
-| `pdf_OCR.py` | OCRs scanned PDFs and writes a searchable-text copy `_ocr.pdf` | PyMuPDF, rapidocr-onnxruntime |
 | `pdf_split.py` | Splits large PDFs into parts under 95 MB (staying below GitHub's 100 MB limit); override with `--limit` | PyMuPDF |
+| `pdf_tex_layer.py` | Stamps a hand-written LaTeX source onto a PDF page as an invisible text layer, so copying the page yields compilable LaTeX; the page's own stale text layer is dropped by re-rendering the visual content as a bitmap, and every injected line is read back as a self-check | PyMuPDF |
 | `pdf_to_txt.py` | Extracts each PDF page's text into a same-named `.txt` | pypdf |
 | `md_to_pdf.exe` | Prebuilt executable that converts Markdown to PDF | — |
 
