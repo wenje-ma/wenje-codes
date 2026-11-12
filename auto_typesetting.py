@@ -1,16 +1,29 @@
+"""Run the math-rewrite chain over one file or folder.
+
+Chain: leftright.py (bare brackets -> \\left/\\right) then math_space_strip.py
+(strip whitespace inside math, shield "<" from a following letter). Both stages
+are idempotent; a file whose stage raises is restored from its pre-run bytes, and
+a file flagged by either stage's self-check is rolled back to its pre-chain state.
+Only "<" glued to a letter is a renderer hazard (a bare "<" before a command such
+as "\\alpha" is not a tag opener and needs no shield), so no standalone
+angle-bracket pass exists any more.
+"""
 import importlib.util
 import io
+import re
 import sys
 from contextlib import redirect_stdout
 from pathlib import Path
 from tkinter import Tk,filedialog
 HERE=Path(__file__).resolve().parent
-STAGES=("leftright","space_gt","math_space_strip")
+STAGES=("leftright","math_space_strip")
 EXTS=(".md",".qmd",".tex")
 MAX_LINES=40
 ENC_SKIP="non-UTF-8"
+ANGLE_LETTER=re.compile(r"<[A-Za-z]")
 
 def load(name:str):
+  """Load a sibling script as a module."""
   path=HERE/(name+".py")
   if not path.is_file():
     raise FileNotFoundError(f"missing sibling script: {path}")
@@ -21,21 +34,21 @@ def load(name:str):
   spec.loader.exec_module(mod)
   return mod
 
-def targets_of(path:Path):
+def targets_of(path:Path)->"list[Path]":
   if path.is_file():
     return[path] if path.suffix.lower() in EXTS else[]
   files=[p for p in path.rglob("*") if p.is_file() and p.suffix.lower() in EXTS]
   files.sort(key=lambda p: str(p).lower())
   return files
 
-def show(lines)->None:
+def show(lines:"list[str]")->None:
   for k,line in enumerate(lines):
     if k>=MAX_LINES:
       print(f"    ... {len(lines)-MAX_LINES} more lines suppressed")
       break
     print(f"    {line}")
 
-def run_stage(mod,files,label,state)->"tuple[int,int,int,int]":
+def run_stage(mod,stage:str,files:"list[Path]",state)->"tuple[int,int,int,int]":
   changed=skipped=warned=errors=0
   lines=[]
   for f in files:
@@ -62,7 +75,7 @@ def run_stage(mod,files,label,state)->"tuple[int,int,int,int]":
       elif line.startswith("Warning"):
         warned+=1
       lines.append(line)
-  print(f"  {label}: changed {changed}, skipped {skipped}, warnings {warned}, errors {errors}")
+  print(f"  {stage}: changed {changed}, skipped {skipped}, warnings {warned}, errors {errors}")
   show(lines)
   return changed,skipped,warned,errors
 
@@ -74,24 +87,29 @@ def restore(f:Path,state)->bool:
     print(f"    restore failed: {f} ({e})")
     return False
 
-def settle(files,state)->"tuple[int,int,int,int,int]":
+def settle(files,state)->"tuple[int,int,int,int,int,list]":
   changed=unchanged=rejected=encoding=errors=0
+  left=[]   # files the chain gave up on; their residue is not an invariant break
   for f in files:
     st=state[f]
     if st["error"]:
       restore(f,state)
       errors+=1
+      left.append(f)
       print(f"    error, chain undone: {f}  {st['error']}")
       continue
     if st["reject"]:
       if ENC_SKIP in st["reject"]:
         encoding+=1
+        left.append(f)
         print(f"    not UTF-8, left alone: {f}")
       elif restore(f,state):
         rejected+=1
+        left.append(f)
         print(f"    self-check failed, chain undone: {f}  {st['reject']}")
       else:
         errors+=1
+        left.append(f)
       continue
     try:
       now=f.read_bytes()
@@ -105,10 +123,13 @@ def settle(files,state)->"tuple[int,int,int,int,int]":
       changed+=1
   print(f"  net: changed {changed}, unchanged {unchanged}, restored {rejected}, "
         f"non-UTF-8 {encoding}, errors {errors}")
-  return changed,unchanged,rejected,encoding,errors
+  return changed,unchanged,rejected,encoding,errors,left
 
-def audit(strip_mod,files)->int:
-  bad=[]
+def audit(strip_mod,files)->"tuple[int,int]":
+  """Check the chain's own invariants on the files it wrote: no whitespace and
+  no "<" glued to a letter left inside a math span."""
+  space_files=[]
+  angle_files=[]
   total_spans=0
   unreadable=0
   for f in files:
@@ -119,22 +140,35 @@ def audit(strip_mod,files)->int:
       continue
     spans=strip_mod.math_spans(text,f.suffix.lower())
     total_spans+=len(spans)
-    if any(ch in strip_mod.SPACE for a,b,ol,cl in spans for ch in text[a:b]):
-      bad.append(f)
+    if any(ch in strip_mod.SPACE for a,b,_,_ in spans for ch in text[a:b]):
+      space_files.append(f)
+    for a,b,ol,cl in spans:
+      body=text[a+ol:b-cl]
+      if ANGLE_LETTER.search(body):
+        angle_files.append(f)
+        break
   print(f"  audit: {len(files)} files, {total_spans} math spans, "
-        f"{len(bad)} file(s) still hold whitespace inside math, {unreadable} unreadable")
-  for f in bad[:MAX_LINES]:
-    print(f"    {f}")
-  if len(bad)>MAX_LINES:
-    print(f"    ... {len(bad)-MAX_LINES} more lines suppressed")
-  return len(bad)
+        f"{len(space_files)} with whitespace left in math, "
+        f"{len(angle_files)} with '<'+letter left in math, {unreadable} unreadable")
+  for f in space_files[:MAX_LINES]:
+    print(f"    whitespace: {f}")
+  for f in angle_files[:MAX_LINES]:
+    print(f"    angle: {f}")
+  return len(space_files),len(angle_files)
 
 def run(path:Path)->int:
   files=targets_of(path)
   if not files:
     print(f"No .md/.qmd/.tex files in: {path}")
     return 0
-  print(f"Chain over {len(files)} file(s) in {path}")
+  print(f"Chain {' -> '.join(STAGES)} over {len(files)} file(s) in {path}")
+  mods={}
+  for name in STAGES:
+    try:
+      mods[name]=load(name)
+    except Exception as e:
+      print(f"cannot load {name}: {e}")
+      return 1
   state={}
   order=[]
   for f in files:
@@ -143,21 +177,17 @@ def run(path:Path)->int:
       order.append(f)
     except OSError as e:
       print(f"  unreadable, left alone: {f} ({e})")
-  mods=[]
   for i,name in enumerate(STAGES,1):
     print(f"[{i}/{len(STAGES)}] {name}")
-    try:
-      mod=load(name)
-    except Exception as e:
-      print(f"  cannot load {name}: {e}")
-      return 1
-    mods.append(mod)
-    run_stage(mod,order,name,state)
+    run_stage(mods[name],name,order,state)
   print("[net]")
-  changed,unchanged,rejected,encoding,errors=settle(order,state)
+  changed,unchanged,rejected,encoding,errors,left=settle(order,state)
   print("[audit]")
-  bad=audit(mods[-1],order)
-  return 1 if bad or rejected or errors else 0
+  clean=[f for f in order if f not in left]
+  if left:
+    print(f"  {len(left)} file(s) left as they were, not audited")
+  bad_space,bad_angle=audit(mods["math_space_strip"],clean)
+  return 1 if bad_space or bad_angle or errors else 0
 
 def select_path()->"Path|None":
   root=Tk()

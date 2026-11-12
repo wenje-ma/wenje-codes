@@ -12,7 +12,7 @@ CTRL_SPACE=re.compile(r"(\\+)([ \t])")
 CTRL_GLUE=re.compile(r"\\([A-Za-z]+)([ \t]+)([A-Za-z])")
 EMPTY_GLUE=re.compile(r"\\([A-Za-z]+)\{\}([A-Za-z])")
 CTRL_TRAIL=re.compile(r"\\([A-Za-z]+)([ \t]+)")
-ANGLE_GLUE=re.compile(r"([<>])([ \t]+)([A-Za-z])")
+ANGLE_GLUE=re.compile(r"(<)([ \t]*)([A-Za-z])")
 CTRL_WORD=re.compile(r"\\[A-Za-z]+")
 TEXT_MODE=re.compile(r"\\(?:text|mbox|textrm|textnormal|intertext|hbox)\s*\{")
 FENCE=re.compile(r"([ \t]{0,3})(`{3,}|~{3,})")
@@ -309,7 +309,7 @@ def convert_span(span:str,pairs:Counter,stagger=None,counts=None)->str:
   if stagger is None:
     stagger=[0]
   if counts is None:
-    counts={"text_gap":[0],"punct_thin":[0]}
+    counts={"text_gap":[0],"punct_thin":[0],"angle":[0]}
   span=protect_text_mode(span)
   prev=None
   while prev!=span:
@@ -324,7 +324,10 @@ def convert_span(span:str,pairs:Counter,stagger=None,counts=None)->str:
     return "\\"+m.group(1)+"{"+m.group(2)+"}"
   span=EMPTY_GLUE.sub(_empty,span)
   span=CTRL_SPACE.sub(lambda m: m.group(1)+("," if len(m.group(1))%2 else ""),span)
-  span=ANGLE_GLUE.sub(r"\1{}\3",span)
+  def _angle(m,counts=counts):
+    counts["angle"][0]+=1
+    return "<{}"+m.group(3)
+  span=ANGLE_GLUE.sub(_angle,span)
   span=fix_stagger(span,stagger)
   span=retune_text_gaps(span,counts["text_gap"])
   span=drop_redundant_thin(span,counts["punct_thin"])
@@ -339,7 +342,27 @@ def canonical(span:str)->str:
     s=s.replace("\\\\","\x00")
   return "".join(ch for ch in s if ch not in "{}~" and ch not in SPACE)
 
+WORD_GAP=re.compile(r"[A-Za-z] [A-Za-z]")
+CTRL_WORD=re.compile(r"\\[A-Za-z]+[ \t]*")
+
+def span_hazard(span:str)->"str|None":
+  """Reject a span that is really prose: a raw backtick means the code-span mask
+  drifted, and two Latin words separated by one space means the span runs across
+  body text. Both cases would otherwise let the whitespace pass compress prose.
+  A space after a control word ("\\mathcal F") is normal LaTeX and is masked out
+  before the word test."""
+  bare=protect_text_mode(span)
+  if "`" in bare:
+    return f"backtick inside a math span: {bare[:60]!r}"
+  m=WORD_GAP.search(CTRL_WORD.sub("\x00",bare))
+  if m is not None:
+    return f"prose spaced like text inside a math span: {bare[max(0,m.start()-12):m.end()+12]!r}"
+  return None
+
 def check_span(old:str,new:str)->"str|None":
+  hazard=span_hazard(old)
+  if hazard is not None:
+    return hazard
   left=[ch for ch in new if ch in SPACE]
   if left:
     return f"whitespace left: {left[:3]!r}"
@@ -359,7 +382,7 @@ def convert(text:str,suffix:str=".md",stagger=None,counts=None)->"tuple[str,int,
   if stagger is None:
     stagger=[0]
   if counts is None:
-    counts={"text_gap":[0],"punct_thin":[0]}
+    counts={"text_gap":[0],"punct_thin":[0],"angle":[0]}
   out=[]
   pos=0
   n_space=0
@@ -398,7 +421,7 @@ def process_file(path:Path,stats=None,dry_run=False,pairs_file=None)->None:
       stats["skipped_encoding"]+=1
     return
   st=[0]
-  counts={"text_gap":[0],"punct_thin":[0]}
+  counts={"text_gap":[0],"punct_thin":[0],"angle":[0]}
   new,n_space,n_shift,warnings,pairs,body_pairs=convert(text,path.suffix.lower(),st,counts)
   for w in warnings:
     print(f"Warning: {path.name}: {w}")
@@ -409,6 +432,7 @@ def process_file(path:Path,stats=None,dry_run=False,pairs_file=None)->None:
     stats["stagger"]+=st[0]
     stats["text_gap"]+=counts["text_gap"][0]
     stats["punct_thin"]+=counts["punct_thin"][0]
+    stats["angle"]+=counts["angle"][0]
     if pairs_file is not None:
       for old_body,new_body in body_pairs:
         if old_body!=new_body:
@@ -433,7 +457,8 @@ def process_file(path:Path,stats=None,dry_run=False,pairs_file=None)->None:
 
 def new_stats()->dict:
   return {"files":0,"changed":0,"space":0,"shift":0,"warnings":0,"rejected":0,
-          "skipped_encoding":0,"stagger":0,"text_gap":0,"punct_thin":0,"pairs":Counter()}
+          "skipped_encoding":0,"stagger":0,"text_gap":0,"punct_thin":0,"angle":0,
+          "pairs":Counter()}
 
 def report(stats:dict)->None:
   print("---- summary ----")
@@ -446,6 +471,8 @@ def report(stats:dict)->None:
     print(f"gap next to \\text{{}} retuned to \\; (or dropped after a comma): {stats['text_gap']}")
   if stats["punct_thin"]:
     print(f"redundant \\, dropped after a comma/semicolon: {stats['punct_thin']}")
+  if stats["angle"]:
+    print(f"'<' shielded from a following letter (<{{}}x): {stats['angle']}")
   pairs=stats["pairs"]
   print(f"distinct control-word/next-letter pairs: {len(pairs)}")
   risky=[(f"\\{k[0]} {k[1]}",v) for k,v in pairs.items()
