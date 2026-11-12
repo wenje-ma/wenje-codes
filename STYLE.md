@@ -23,8 +23,10 @@
 
 - 抄写原题; 解答中任意相邻两句都能由上一句推出, 不跳步.
 - 数学作业集文首引用库只收书内带编号条目, 正文引用须加粗条目名. 先写解答, 解答里用到哪条就把哪条抄到文首: 解答没加粗引用的条目一律不写, 不论与本周末章多相关.
+- 文首引用库的排列一律按序号升序; 序号相同的, 按 定义 > 公理 > 引理 > 命题 > 定理 > 推论 > 注记 排(其余类型如 例, 性质, 公式, 结论, 习题 与中英对照的 判定定理, 基本结论 一并排在列出类型之后); 没有序号可排的条目(数学活动, 综合与实践, 只以名字出现的条目)排在库末, 内部保持原相对次序. 全部 homework 文稿的中英两版都适用. 工具:`D:\wenje-ma\wenje-codes\lib_sort.py`, 幂等, 先 `--dry-run` 看改动数再实跑.
 - 教材里的任何文字——定义, 定理, 公式, 例题, 习题结论——都可作为现成结论直接引用使用, 不在解答中重新推导; 只交代它为何用得上, 不重算一遍.
 - 证明按子结论收尾: 一题里有几个独立结论(必要性/充分性, 上界/下界, 各小问), 就各标一次 `$\blacksquare$`, 不等到全题结束才标一次, 末尾也不补第三次. 此条适用于全部泛函作业, 老周次一并回改.
+- `$\blacksquare$` 单独占位, 不与别的记号挤在同一行: 证明以句子收尾时接在句末, 以行间公式收尾时单独成一段, 公式那一行不留 `\qquad\blacksquare` 这类填充.
 - 一切学科的整理文档里, 加粗只用于引用编号条目, 步骤标签等不加粗.
 - 正文只写题目与推导, 不写依据说明, 心得, 旁注; 正文里不出现 `>` 引用块(引用块只用于文首条目库).
 - 英文人名一律改中文译名, 不保留英文原名.
@@ -65,7 +67,8 @@
 - 书稿(英文, Quarto book, 只出 PDF):`D:\wenje-ma\ed4dse\tex`;骨架 `_quarto.yml`,`preamble.tex`,`index.qmd`,`chapters/`;编译在 `tex` 下跑 `quarto render`,产物 `_book\Experimental-Design-for-Data-Science-and-Engineering.pdf`;图从章内引 `../../figures\N.M.pdf`;结构与引用写法见 `tex\README.md`.
 - 交接文档(给同学及其 AI, 讲装 Git/VSCode/MPE 并克隆全部仓库):`D:\wenje-ma\wenjemaths\tutorial\tutorial.md`.
 - 微分几何条目库:`D:\wenje-ma\wenjemaths\forced\dg-mid.md`(按章编号, 引用前先核对条目原文与编号).
-- 公式改写工具链:`D:\wenje-ma\wenje-codes\run_all.py`(`leftright.py` → `space_gt.py` → `math_space_strip.py`); 标点另跑 `cn_punct.py`.
+- 公式改写工具链:`D:\wenje-ma\wenje-codes\run_all.py`(`leftright.py` → `space_gt.py` → `math_space_strip.py`); 标点另跑 `cn_punct.py`; 文首引用库排序另跑 `lib_sort.py`.
+- `lib_sort.py` 认的库区: 首个 `>` 行到首个 `## ` 小标题之间的全部内容; 块首行是 `> **类型 编号 (名称)**`, 块内可含未加引用的 `$$...$$` 行间公式, 随块一起搬. 编号取类型词之后的第一串阿拉伯数字(`4.2.M` 按 `4.2` 排), 括号里只写编号的(`公式 (4.2.17)`)按括号内的编号排.
 - `leftright.py` 认的公式区: `$...$`, `$$...$$`, `\(...\)`, `\[...\]`, 以及 `\begin{equation}`/`align`/`gather`/`multline`/`eqnarray`/`flalign`/`displaymath`/`math`/`split` 及其带星变体这类环境.
 - `\(...\)` 与 `\[...\]` 是糟粕: `.md`/`.qmd` 里一律并成 `$...$` 与 `$$...$$`; `.tex` 里 `\[ \]` 是原生写法, 只当公式区处理, 不改定界符.
 - `leftright.py` 的受保护区(区内一律不改): front matter, ```/~~~ 围栏代码块, 行内反引号, 4 格缩进代码块(块内含 `\命令` 或 `$$` 时按公式处理以免漏改), `<pre>/<code>/<script>/<style>` 与 `<!-- -->`, `\verb`/`\lstinline`, verbatim 类环境, `.tex` 的 `%` 注释, `\text{}` 一类文本命令的参数, `\sqrt[n]` 这类可选参数, `\\[4pt]` 这类换行间距参数. 公式区内部也按同样规则标出不改的位置, 配对仍按整段算. 未闭合的 `$`/`$$`/`\(`/`\[` 报 Warning 并放弃该文件后续内容.
