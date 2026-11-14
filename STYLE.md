@@ -16,6 +16,7 @@
 - 控制词后接字母一律加大括号:`\partial{u}`,`\sqrt{g}`,`\mathrm{d}`; 不写空参数 `\partial{}u`.
 - 矩阵与向量一律加粗, 记号统一 `\boldsymbol{}`(斜粗, 不用 `\mathbf`,`\bm`). 矩阵指 `M_n`,`GL(n,\cdot)`,`SO(n)`,`diag` 之下的元素; 向量指 `\mathbb{R}^n`,`\mathbb{R}^2`,`C^n`,`K^n` 这类坐标空间中的点与向量, 包括 `\left\|x\right\|`,`x+y`,`\left(1-t\right)x+ty`,`\left[x,y\right]` 这种按分量或线性运算使用的场合. 下标照常:`\boldsymbol{M}_p`,`\boldsymbol{v}_\lambda`,`\boldsymbol{x}_n`,`\boldsymbol{D}_t`.
 - 行内公式必须写在一行里. 正文按列宽硬换行时, 不许把 `$...$` 从中间劈开, 更不许在中间夹一个空的 `>`; 宁可让这一行超宽, 也不让价牌跨行. 标题里的公式同理.
+- 行间公式一律与上下各空一行: `$$` 的开定界符上一行, 闭定界符下一行都必须是空行, 不允许 `$$` 紧贴正文; 相邻两个 `$$...$$` 块之间也空一行. 只空一行, 不空两行. 公式块内部各行照旧紧贴, 不插空行. 文首 `> ` 引用块随块走, 不受此条约束.
 - 以下一律不加粗: 标量; 集合与空间名(`K`,`A`,`E`,`\mathbb{R}^n`,`GL(n,\mathbb{R})`); 映射, 函数, 算子(即使在 `L(E,F)` 里, 也含路径与曲线 `\gamma`); 抽象赋范/拓扑向量空间与序列空间 `E`,`F`,`l^p`,`l^\infty`,`C([0,1])` 里的元素(按抽象点处理, 不逐个加粗); 元素分量 `v_i` 与矩阵元 `T_{ij}`; 点对与元组 `\left(x,y\right)`,`\left(u,v\right)`.`
 - 巨型定界符一个都不许出现: `\big`, `\Big`, `\bigg`, `\Bigg` 连同 `l`/`r`/`m` 变体, 一律换成 `\left`/`\right`, 后者按内容自动取高, 更灵活. 三种写法: 成对的括号与竖线 `\big( ... \big)` → `\left( ... \right)`; 带下标的取值竖线 `f\big|_{x=0}` → `\left.f\right|_{x=0}`; 二元斜杠 `\frac{a}{b}\Big/\frac{c}{d}` → `\frac{a}{b}\left/\frac{c}{d}\right.`. 配对按整段一条栈算, 配不上只报 Warning 不改.
 - 尖括号只在 `<` 紧接字母时才危险: `<x` 会被渲染器当成标签开头, 把后文吞掉, 由 `math_space_strip.py` 统一改写成 `<{}x`; `<\命令`(`<\alpha`, `<\left`)与 `>` 后接字母都安全, 不必处理. 因此不再给 `<>` 补空格: 补空格会把真正的 `<div>`/`<br>`, 自动链接 `<https://...>` 劈成非标签, 还会把 `<=`/`>=`/`<<`/`>>` 劈成两个半角符号分开的两截, 干这事的 `space_gt.py` 已删除. 正文(公式外)出现 `<字母` 时写进行内代码, 不写裸的 `<script>`.
@@ -33,7 +34,8 @@
 - 正文只写题目与推导, 不写依据说明, 心得, 旁注; 正文里不出现 `>` 引用块(引用块只用于文首条目库).
 - 英文人名一律改中文译名, 不保留英文原名.
 - 笔记与教材不符处, 悄悄按教材改掉, 不写差异说明.
-- 微分几何: 文首公式条目内附来历推导; 正文不重复推导, 也不另加骨架小节.
+- 微分几何: 文首条目库只抄条目本身(陈述, 条件, 结论), 不写 `来历` 这类推导来源; 正文不重复推导, 也不另加骨架小节.
+- 微分几何作业集的依据一律取讲义 `D:\wenje-ma\differential-geometry\textbooks\handout\*.md`(13 讲); 讲义条目编号讲义自编, 三级 `章.节.条`: 章按知识点所属板块定(共 11 章, 从 1 起), 节沿用讲义原有的每个 §(87 节, 在章内从 1 重排), 条为节内全部条目按出现顺序从 1 编到底, 不分类型, 不用字母后缀; 教材只用于对齐记号与校对内容, 其章节号不参与编号, 条目标头括号里的 `(教材 §5.3 定理 3.4)` 是校对痕迹, 保留不动; 文首条目库只用讲义编号(如 `定义 1.2.5`), 不加授课日期, 不写"讲义第几讲"之类的来历; 题目照抄, 解答按讲义记号, 顺序与已有结论重写, 讲义已有的结论直接加粗引用, 不重算.
 
 ## 代码
 
@@ -69,7 +71,7 @@
 - 微分几何作业集:`D:\wenje-ma\differential-geometry\homework-cn\week6.md`,`week7.md`.
 - 书稿(英文, Quarto book, 只出 PDF):`D:\wenje-ma\ed4dse\tex`;骨架 `_quarto.yml`,`preamble.tex`,`index.qmd`,`chapters/`;编译在 `tex` 下跑 `quarto render`,产物 `_book\Experimental-Design-for-Data-Science-and-Engineering.pdf`;图从章内引 `../../figures\N.M.pdf`;结构与引用写法见 `tex\README.md`.
 - 交接文档(给同学及其 AI, 讲装 Git/VSCode/MPE 并克隆全部仓库):`D:\wenje-ma\wenjemaths\tutorial\tutorial.md`.
-- 微分几何条目库:`D:\wenje-ma\wenjemaths\forced\dg-mid.md`(按章编号, 引用前先核对条目原文与编号).
+- 微分几何条目库:`D:\wenje-ma\wenjemaths\forced\dg-mid.md`(按章编号, 引用前先核对条目原文与编号); 它用教材式 `章.节.条`, 与讲义自编的三级号是两套, 改讲义编号时不动它.
 - 公式改写工具链:`D:\wenje-ma\wenje-codes\auto_typesetting.py`(`leftright.py` → `math_space_strip.py`); 标点另跑 `cn_punct.py`; 文首引用库排序另跑 `lib_sort.py`.
 - `math_space_strip.py` 认公式区之前先屏蔽围栏代码, 行内代码与 `.tex` 注释; 公式区里若混进反引号, 或出现"词 空格 词", 判为散文误判, 整文件跳过并报 Warning(`wenje-codes` 自己的 `.md` 是讲代码的散文, 每次都被跳过, 属正常), 因为压缩空白正是把散文空格抹平的那一步.
 - `lib_sort.py` 认的库区: 首个 `>` 行到首个 `## ` 小标题之间的全部内容; 块首行是 `> **类型 编号 (名称)**`, 块内可含未加引用的 `$$...$$` 行间公式, 随块一起搬. 编号取类型词之后的第一串阿拉伯数字(`4.2.M` 按 `4.2` 排), 括号里只写编号的(`公式 (4.2.17)`)按括号内的编号排.
@@ -101,3 +103,9 @@
 - PDF 处理范围(2026-11-12 定): 整份排除 `applied-multivariate-statistics`, `appreciation`, `differential-geometry`, `states-python`, `topology`; `mathematical-analysis` 只排除 `Zad-01…10`. 全库 314 份 24595 页里剔除 140 份 14815 页, 剩 174 份 9780 页; 其中"手搓 LaTeX 注入"只剩 `junior-mathematics\textbooks\9.1_part2.pdf` 11 页, 其余是 99 份插图、49 份文本层已可用、16 本扫描教材 4113 页(OCR 可搜索层, 按需)、9 份有源。清单在 `wenje-codes\PDF-INVENTORY.md`。
 - 判断"PDF 是否自产"不能只看目录里有没有 `.qmd`: `reference\` 下放扫描书时旁边也躺着自己的笔记 `.qmd`, 资治通鉴与张的多元统计两本都被误判成有源。判据应是"同目录有**同名** `.qmd`/`.tex`", 或该目录本身是书的编译目录(`index.qmd`/`_quarto.yml`/`main.tex`)。
 - "有源"只是"能查源文件", 不等于"公式能复制": TeX 编出的 PDF 文本层天生把公式压平(`x_p` 抽成 `x1`, 上下标只是字号更小基线更高, 没有语义), 换编译器重编也一样; 要 LaTeX 只有两条路——从源文件拿, 或在 PDF 里塞手抄的隐形 LaTeX 层。注入不是提取而是重新录入, 所以它的成本等于打字成本, 与 OCR 技术无关, 也就无法全库规模化。
+
+- Minecraft 实例(Witchcraft and Wizardry, 1.16.3 + Forge 34.1.42, 零模组): `D:\Minecraft\.minecraft\versions\Witchcraft and Wizardry`. 存档 `saves\Witchcraft and Wizardry` 已还原为原版世界 (region 与 level.dat 取原始 zip), 数据包 `hp` 保留汉化版, 资源包 `WnW-zh_CN` 负责界面与物品名. 备份: 原始解包 `D:\Minecraft\backups\原始地图-解包-20261114`, 汉化前存档 `D:\Minecraft\backups\主存档-修复前-20261114`, 原始数据包 `D:\Minecraft\backups\hp-数据包-原文-20261114.zip`.
+- 地图逻辑: 命令方块时钟在 x 10002..10012, y 65, z 0..12; 出生点 10009/59/9; 输入靠计分板 `sneak`/`pressQ`/`pressF`/`rightClick`, 再转实体标签. 界面退出普遍是 `shiftTest==1` 加 `selectSecondary==0`, 长按 Shift 反而失效, 要松开再点.
+- 翻译铁律: 只动显示字段 (告示牌 `Text1..4`, `CustomName`, 物品 `display.Name`/`Lore`, 书 `pages`); `Command` 字段, 方块 `Properties`, 区块 `Status`, 实体 `id` 一律不许翻. 之前整片翻译把 `postprocessed` 翻成"后处理的", 方块 ID 翻成"我的世界:石头", 命令方块全部失灵, 表现就是"进世界没剧情".
+- 仓库 `D:\wenje-ma\witchcraft-wizardry` (2026-11-14 建): 只放自写脚本, 机制文档, 英中对照表, 示例数据包; 原作者素材 (zip, mca, saves, 原数据包) 由 `.gitignore` 挡住. 首个提交 `d4f238e`, 25 个文件.
+- git 本体在 `D:\Git\cmd\git.exe`, 不在 PATH 里, 命令行调用要写全路径.
