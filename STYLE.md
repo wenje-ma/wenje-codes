@@ -34,6 +34,7 @@
 - 证明按子结论收尾: 一题里有几个独立结论(必要性/充分性, 上界/下界, 各小问), 就各标一次 `$\blacksquare$`, 不等到全题结束才标一次, 末尾也不补第三次. 此条适用于全部泛函作业, 老周次一并回改.
 - `$\blacksquare$` 单独占位, 不与别的记号挤在同一行: 证明以句子收尾时接在句末, 以行间公式收尾时单独成一段, 公式那一行不留 `\qquad\blacksquare` 这类填充.
 - 一切学科的整理文档里, 加粗只用于引用编号条目, 步骤标签等不加粗.
+- 解答不写 "第X步" 这类步骤标签 (2026-11-19, 用户原话 "我不喜欢这样表示", 参照 functional-analysis 的 `homework\week9.md`): 段落直接承接推导, 转折只用 "先证/再证/最后验证" 这类词, 跨步指代换成 "上面的 `\mathrm{I}`" / "上两段" 这种说法, 全文不留步骤编号. 已按全库口径改毕 (2026-11-19, 用户指令 "改 `D:\wenje-ma` 中所有这种问题"): `homework` 下 62 个 md 与 `reset-20261119` 镜像里的步骤标签与跨步指代全部清掉, 只留 `junior-mathematics\homework\week48.md` 与 `primary-mathematics\homework\week49.md` 题干本身的折纸步骤与运算顺序 (题目原文, 不能动). `differential-geometry\textbooks\handout` 是讲义原文, `states-python` 是建模流程与教程, 未动.
 - 正文只写题目与推导, 不写依据说明, 心得, 旁注; 正文里不出现 `>` 引用块(引用块只用于文首条目库).
 - 英文人名一律改中文译名, 不保留英文原名; 微分几何里固定写作 Gauss→高斯, Gauss-Bonnet→高斯-博内, Stokes→斯托克斯, Frenet→弗雷内, Fenchel→芬切尔, Poincaré→庞加莱, Hopf-Rinow→霍普夫-里诺, Weingarten→魏因加滕, Minkowski→闵可夫斯基; Hessian 不写人名, 直接称 二阶偏导数矩阵.
 - 笔记与教材不符处, 悄悄按教材改掉, 不写差异说明.
