@@ -70,8 +70,57 @@ def split_pdf(pdf_path:str,limit_bytes:int=DEFAULT_LIMIT_BYTES,out_dir:Path|None
     if tmp.exists():
       tmp.unlink()
   return parts
+def _bounds(n:int,parts:int)->list[tuple[int,int]]:
+  return [(round(i*n/parts),round((i+1)*n/parts)-1) for i in range(parts)]
+def split_pdf_even(pdf_path:str,limit_bytes:int=DEFAULT_LIMIT_BYTES,out_dir:Path|None=None,parts:int|None=None)->list[str]:
+  pdf_file=Path(pdf_path)
+  if not pdf_file.exists():
+    raise FileNotFoundError(f"File not found: {pdf_file}")
+  size=pdf_file.stat().st_size
+  if size<limit_bytes:
+    print(f"No split needed: {pdf_file.name} ({size/1048576:.1f}MB < limit {limit_bytes/1048576:.0f}MB)",flush=True)
+    return[str(pdf_file)]
+  if out_dir is None:
+    out_dir=pdf_file.parent
+  out_dir.mkdir(exist_ok=True)
+  src=fitz.open(str(pdf_file))
+  n=src.page_count
+  if n==0:
+    src.close()
+    raise ValueError(f"Empty PDF: {pdf_file.name}")
+  tmp=out_dir/f".tmp_{pdf_file.stem}_split.pdf"
+  count=parts or max(2,-(-size//limit_bytes))
+  try:
+    while True:
+      ranges=_bounds(n,count)
+      sizes=[]
+      for start,end in ranges:
+        print(f"  Measuring part {len(sizes)+1}/{count}: pages {start+1}-{end+1}...",flush=True)
+        sizes.append(_measure(src,start,end,tmp))
+      if all(s<limit_bytes for s in sizes) or count>=n:
+        break
+      print(f"  Some part exceeds {limit_bytes/1048576:.0f}MB, retry with {count+1} parts",flush=True)
+      count+=1
+    out=[]
+    for index,(start,end) in enumerate(ranges,1):
+      part=out_dir/f"{pdf_file.stem}_part{index}.pdf"
+      doc=fitz.open()
+      doc.insert_pdf(src,from_page=start,to_page=end)
+      doc.save(str(part),garbage=3,deflate=True)
+      doc.close()
+      sz=part.stat().st_size
+      flag=" (single page over limit, cannot split further)" if sz>=limit_bytes else ""
+      print(f"Generated: {part.name} (pages {start+1}-{end+1}, {end-start+1} pages, {sz/1048576:.1f}MB){flag}",flush=True)
+      out.append(str(part))
+  finally:
+    src.close()
+    if tmp.exists():
+      tmp.unlink()
+  return out
 def parse_args(argv:list[str]):
   limit=DEFAULT_LIMIT_BYTES
+  even=False
+  parts=None
   files=[]
   i=1
   while i<len(argv):
@@ -79,10 +128,17 @@ def parse_args(argv:list[str]):
     if a=="--limit" and i+1<len(argv):
       limit=int(float(argv[i+1])*1024*1024)
       i+=2
+    elif a=="--even":
+      even=True
+      i+=1
+    elif a=="--parts" and i+1<len(argv):
+      even=True
+      parts=int(argv[i+1])
+      i+=2
     else:
       files.append(a)
       i+=1
-  return limit,files
+  return limit,even,parts,files
 def select_pdfs()->list[Path]:
   root=Tk()
   root.withdraw()
@@ -107,7 +163,7 @@ def select_pdfs()->list[Path]:
       break
   return targets
 def main():
-  limit,files=parse_args(sys.argv)
+  limit,even,parts,files=parse_args(sys.argv)
   if files:
     selected=[Path(a) for a in files]
   else:
@@ -123,8 +179,11 @@ def main():
       continue
     print(f"\nProcessing: {pdf.name} ({pdf.stat().st_size/1048576:.1f}MB)",flush=True)
     try:
-      parts=split_pdf(str(pdf),limit)
-      total+=len(parts)
+      if even:
+        result=split_pdf_even(str(pdf),limit,parts=parts)
+      else:
+        result=split_pdf(str(pdf),limit)
+      total+=len(result)
       done+=1
     except Exception as e:
       print(f"Failed: {pdf.name}  {str(e)}",flush=True)
