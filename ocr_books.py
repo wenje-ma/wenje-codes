@@ -1,5 +1,8 @@
-# $py = "D:\wenje-ma\wenje-codes\.venv-ocr\Scripts\python.exe"
-# & $py "D:\wenje-ma\wenje-codes\ocr_books.py" --jobs 2
+'''
+$py = "D:\wenje-ma\wenje-codes\.venv-ocr\Scripts\python.exe"
+& $py "D:\wenje-ma\wenje-codes\ocr_books.py" --jobs 2
+
+'''
 
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed

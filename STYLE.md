@@ -50,7 +50,8 @@
 - 习题 2.4-5 的题面按 2026-11-18 用户改定的口径: 上边界 `f_1=\max A_x` 是凹函数, 下边界 `f_2=\min A_x` 是凸函数, 恒等式写成 `f_2(x)\le y\le f_1(x)`; 旧版"`-f_2` 加两个都叫凸"的写法作废, 见到即改.
 - 习题 2.4-6 必须真落在**定理 2.4.1 (凸集分离定理)** 上: 只引**引理 2.4.1 (一点与凸集的分离)** 等于没按题目要求, 用户 2026-11-18 原话"这也没用凸集分离定理证明啊"返工. 定稿写法是取两个凸集——上方图 `M` 与单点集 `N=\{(x,\varphi(x))\}`——先算 `M^\circ=\{v>\varphi(u)\}\ne\emptyset` 与 `M^\circ\cap N=\emptyset`, 由定理得 `\sup_{M}f\le\inf_{N}f=f(x,\varphi(x))`, 再定 `b\le0`, 排除 `b=0` 得 `b<0`, 除以 `b` 反号取 `m=-a/b`; 同时补上三处跳步(实值凸函数在 `\mathbb{R}` 上连续给出内部的球估计, `b=0` 时由 `u\to\pm\infty` 逼出 `a=0`, 结论后点明该等值线是过 `(x,\varphi(x))` 的支撑直线, 斜率即 `m`).
 - 求测地曲率前先算 `n=e_1\times e_2` 的指向(球面按 `u,v` 排序时是内法向), 在解答里写明引用**推导 7.3.1 (正交参数网下的测地曲率)** 用的就是这个定向, 答案后再补一句换向时的符号(球面纬圆: 内法向 `-\tan u_0/a`, 外法向取正) (2026-11-18, week9 习题五 10, 11).
-- 求旋转面 `\boldsymbol{r}=(u\cos v,u\sin v,f(u))` 的测地线: 由 `\ddot{v}+(2/u)\dot{u}\dot{v}=0` 得 `(u^2\dot{v})'=0`, 记 `h=u^2\dot{v}`; 弧长给 `A\dot{u}^2=1-h^2/u^2`(`A=1+f'^2`), 故 `h=0` 是经线, `h>0` 给 `\frac{\mathrm{d}v}{\mathrm{d}u}=\pm\frac{h\sqrt{A}}{u\sqrt{u^2-h^2}}` 的积分, 转向点 `u=h` 处 `\sin\theta=1`; 充分性靠能量 `E=A\dot{u}^2+u^2\dot{v}^2` 的导数正比于第一式, 别只写必要条件 (2026-11-18, week9 习题五 15).
+- 求旋转面 `\boldsymbol{r}=(u\cos v,u\sin v,f(u))` 的测地线走正交网路线, 不写克里斯托费尔, 也不写测地线方程组: 由 **推论 7.3.2 (正交参数网下的测地线方程)** 得 `\theta'=-\sin\theta/(u\sqrt{A})`, 配上 `\cos\theta=\dot{u}\sqrt{A}` 与 `\sin\theta=u\dot{v}` 即 `(u\sin\theta)'=0`, 记 `h=u\sin\theta=u^2\dot{v}`; 弧长给 `A\dot{u}^2=1-h^2/u^2`(`A=1+f'^2`), 故 `h=0` 是经线, `h>0` 给 `\frac{\mathrm{d}v}{\mathrm{d}u}=\pm\frac{h\sqrt{A}}{u\sqrt{u^2-h^2}}` 的积分, 转向点 `u=h` 处 `\sin\theta=1`; 充分性不必用能量, 对 `u\sin\theta=h` 求导就回到同一方程, `\cos\theta=0` 只在转向点出现, 由 `\theta` 光滑取极限 (2026-11-19, 用户指定 week9 习题五 15 改走这条 B 路线).
+- 改用 B 路线后 week9 正文不再引用 **命题 7.2.2 (测地线方程)**, 该条已从 week9 库区删掉; 以后回改这题别再把它抄回去, 除非解答里真的用到 `\ddot{u}^\alpha+\Gamma^\alpha{}_{\varepsilon\tau}\dot{u}^\varepsilon\dot{u}^\tau=0`.
 - 圆柱面的和乐群: `I=\mathrm{d}\theta^2+\mathrm{d}u^2` 系数全常数 ⇒ `\Gamma\equiv0` ⇒ 平行场分量常数 ⇒ 每个和乐变换都是恒等映射, `\mathrm{Hol}(P)=\{\mathrm{id}\}`, 是平凡群; 别停在"是 O(2) 的子群" (2026-11-18, week9).
 
 - 习题 2.5-1 的定稿口径: 直接引**注 2.5.1**, 不构造极值函数 $f_0$, 也不分 $p=1$ 与 $1<p<\infty$ 两段重算; 只留一句赫尔德不等式说明每个 $\beta\in{L}^q$ 给出 $L^p$ 上的连续线性泛函, 满射, 保范与范数相等一律由注中的唯一性与 $\left\|\psi\right\|=\left\|g\right\|_q$ 直接读出 (2026-11-19, week9).
@@ -109,6 +110,7 @@
 - Minecraft 实例(magic,1.21.1 + NeoForge 21.1.265):`D:\Minecraft\.minecraft\versions\magic`;堆叠模组 All Stacks Infinite 14.1.0.11,配置 `config\All-Stacks-Infinite.toml`(`global_stack_size=99000000`,`experimental=false`),68 个可附魔物品走 `[items_custom_stack_size]` 压回 1,名单取 `minecraft:enchantable/*` 物品标签并集加 `enchanted_book`.
 - HMCL 版本图标:在版本根目录放 `icon.png`(png/jpg/jpeg/bmp/gif/webp 皆可, 按 64 像素加载, 图最好 64 或 64 的整数倍);`versions\<实例>\.hmcl\config\instance-game-settings.json` 里的 `icon` 字段只管内置图标, 存在图标文件时优先用文件.
 - 物品图标素材:游戏本体与模组 jar 内 `assets\<命名空间>\textures\item\*.png` 即 16x16 原图, 直接解压加最近邻放大即可, 不必进游戏截图.
+- Minecraft 实例(1.20.1-Fabric, 纯 Fabric + Sodium/Iris/Jade/JourneyMap/Sodium):`D:\Minecraft\.minecraft\versions\1.20.1-Fabric`;模组改键一律是原版键位, 记在 `options.txt` 的 `key_key.<命名空间>.<按键名>:key.keyboard.<键名>` 行(如 `key_key.dupetrigger.dupe_trigger_keybinding:key.keyboard.equal`), 要么游戏内 选项 → 控制 → 按键绑定(无中文译名的模组条目落在"杂项"分类里, 显示英文原名), 要么退出游戏后改这一行;右 Alt 写 `key.keyboard.right.alt`. 游戏运行时改 `options.txt` 会被退出时写回的值覆盖, 必须先退游戏 (2026-11-20).
 - Java 工具链:`D:\MicrosoftJDK` 是 Microsoft OpenJDK 25.0.4 完整 JDK, `javac` 与 `java` 都在其 `bin` 下, `PATH` 已含该目录, 用户级 `JAVA_HOME` 也指它. `D:\Downloads\jre-8u511-windows-x64.exe` 只是 JRE 不含 `javac`, 未安装, 写代码用不上; 要 Java 8 语义时用 `javac --release 8` 而不是换 JDK.
 - VSCode Java:扩展 `vscjava.vscode-java-pack`(`redhat.java` 1.58.0, JDT LS 3.48, 支持 Java 25);`settings.json` 里 `java.jdt.ls.java.home` 与 `java.configuration.runtimes`(`JavaSE-25`, `default`)都指 `D:\MicrosoftJDK`;格式化 profile 取 `GoogleStyle`,`[java]` 缩进 2 格并关掉 `detectIndentation`;保存只整理 import, 不自动格式化和不自动组织代码.
 - VSCode Java 卡在 "Loading Java progress" 的根因:JDT LS 导入 `D:\wenje-ma` 下 `SpellEngine` 与 `wizards` 时, Gradle wrapper 要先下载发行包, 而 `services.gradle.org` 307 跳到 GitHub release assets, 国内实测 30 KB/s, 每次 4 分钟超时后无限重试. 已把 Gradle 8.14 预置进 `C:\Users\wenje\.gradle\wrapper\dists\gradle-8.14-bin\38aieal9i53h9rfe7vjup95b9`(解压目录 `gradle-8.14` 加空标记文件 `gradle-8.14-bin.zip.ok`, wrapper 见到标记即跳过下载), `D:\wenje-ma\SpellEngine\gradlew.bat --version` 528 ms 通过. 之后换 gradle 版本用 `https://mirrors.huaweicloud.com/gradle/gradle-<版本>-bin.zip`(1-4 MB/s) 或 `mirrors.cloud.tencent.com/gradle`, 不要用官方链接.
@@ -829,3 +831,23 @@ emember picture, overlay 的版面以 current page.north west 为原点时必须
 - 小时分布: 8-23 点为主(各 25-47 条), 00 点 35 条、01 点 1 条(熬夜), 02 点 1 条。
 - 星期分布: Mon 82 / Tue 97 / Wed 90 / Thu 76 / Fri 87 / Sat 90 / Sun 90, 基本均匀。
 - 明细留档: `reset-20261119/jitter-report.tsv`(612 行, 原时间 → 新时间)。
+
+## 应用多元统计分析作业 (2026-11-19)
+
+### 交付与教材
+- 教材 `applied-multivariate-statistics/tex/reference/applied-multivariate-statistics_gao.pdf` **无文本层**, 只能渲染 PNG 读图; PDF 页与书页**不是固定偏移**, 已核实: p061=110-111, p064=116-117, p066=120-121, p067=122-123, p068=124-125, p069=126-127, p074=136-137, p085=160-161, p090=170-171(习题四), p093=176-177, p094=178-179, p095=180-181, p096=182-183, p097=184-185, p107=206-207, p109=210-211(习题五起), p110=212-213, p111=214-215, p206=402-403, p207=404-405(答案), p208=406-407.
+- 重渲命令: `D:\Python314\python.exe` + pymupdf(`fitz`), `d[i].get_pixmap(dpi=150).save("pages/p0xx.png")`.
+- 交付 `homework/ch02.md`~`ch05.md`: 题号 2-3/5/6/8/14/15/16/18, 3-1/2/4/7/9/10(把"两个总体"改作 K 个总体), 4-4/4-6/4-10(SAS), 5-5/5-9/5-10/5-11(SAS).
+- 知识点只取该书, 引用库只收书内**带编号**条目且正文**加粗引用**过; 无编号公式在正文写出, 不入库.
+
+### 排版链
+- 入口 `wenje-codes/auto_typesetting.py <文件或目录>` 跑 leftright + math_space_strip; 再依次跑 `md/cn_punct.py`、`md/lib_sort.py`、`md/lib_inline.py`, 四个脚本都直接吃路径参数实跑.
+- 坑: 公式里出现**单个 `|`**(如 `P(t|X)`)会让 leftright 报 "odd | count in math span (skipped)" 并**整段跳过**, 该 span 的 `\left/\right` 就不再处理; 条件竖线一律写 `\mid`.
+- 坑: `\quad s` 这种"`\quad` 后接单字母"会被改写成 `\quad{s}`(渲染无差别, 不必回改).
+- 坑: `cn_punct` 会把抄题原句里的 "、" 换成 ", ", 这是规范要求的, 别手工改回去.
+
+### 数值口径
+- SAS 题只给程序块 + 计算结果表, 不伪造日志; 数值全部用 R 复算 (`codes/yyexa0404.R`、`yyexa0410.R`、`yyexa0509/0510/0511.R`).
+- 书末答案两处笔误, 出稿按复算值: 4-10 的 $\hat{Y}_2$ 中 $x_4$ 系数为 0.0151(书印 -1.6982); 5-10(2) 三个待判类号为 1,2,3(书印 1,1,3).
+- 坑: 组间离差阵不能写 `n_i*(colMeans(Xi)-colMeans(X))^2`(得到的是向量, 按列循环进矩阵), 必须 `n_i*tcrossprod(d)`; 否则威尔克斯 Λ 出现 >1 与负值, 逐步判别的 p 值全变 1, 路径发散.
+- 坑: 逐步判别的引入检验 `F=(1-U)/U*(n-k-r)/(k-1)`, 剔除时把 r 换成 r-1; 书末答案 5-10 用的是临界值 0.18(不是常用 0.15), 按 0.18 才复现书上的 {x2, x4}.
